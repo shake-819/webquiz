@@ -1,5 +1,4 @@
-// あとでKEITO CloudのURLに変更します
-const API_URL = "https://あなたのKEITOCloudのURL";
+const API_URL = "https://sheet2api.com/v1/29AXFCHHTfS7/discord";
 
 const category = document.getElementById("category");
 const question = document.getElementById("question");
@@ -9,62 +8,127 @@ const result = document.getElementById("result");
 const submitBtn = document.getElementById("submit");
 const nextBtn = document.getElementById("next");
 
+let questions = [];
 let currentQuestion = null;
+let recentQuestions = [];
 
 // 問題取得
-async function loadQuiz() {
+async function loadQuestions() {
+
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    if (Array.isArray(data))
+        questions = data;
+    else if (Array.isArray(data.rows))
+        questions = data.rows;
+    else
+        questions = [];
+
+    nextQuiz();
+
+}
+
+// 次の問題
+function nextQuiz() {
 
     result.textContent = "";
     answer.value = "";
 
-    const res = await fetch(`${API_URL}/quiz`);
-    const data = await res.json();
+    let available =
+        questions.filter(q =>
+            !recentQuestions.includes(q.id)
+        );
 
-    currentQuestion = data;
+    if (available.length === 0) {
 
-    category.textContent = `【${data.category}】`;
-    question.textContent = data.question;
+        recentQuestions = [];
+
+        available = questions;
+
+    }
+
+    currentQuestion =
+        available[
+            Math.floor(Math.random() * available.length)
+        ];
+
+    recentQuestions.push(currentQuestion.id);
+
+    if (recentQuestions.length > 10)
+        recentQuestions.shift();
+
+    category.textContent = `【${currentQuestion.category}】`;
+    question.textContent = currentQuestion.question;
+
 }
 
-// 回答送信
-async function submitAnswer() {
+// 正解判定
+function submitAnswer() {
 
     if (!currentQuestion) return;
 
-    const userAnswer = answer.value.trim();
+    const userAnswer =
+        answer.value.trim().toLowerCase();
 
-    if (!userAnswer) {
-        alert("答えを入力してください");
-        return;
+    const correctAnswer =
+        String(currentQuestion.answer)
+        .trim()
+        .toLowerCase();
+
+    let correct = false;
+
+    const type =
+        currentQuestion.type || "normal";
+
+    if (type === "normal") {
+
+        correct =
+            userAnswer === correctAnswer;
+
     }
 
-    const res = await fetch(`${API_URL}/answer`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            id: currentQuestion.id,
-            answer: userAnswer
-        })
-    });
+    else if (type === "multi") {
 
-    const data = await res.json();
+        correct =
+            correctAnswer
+            .split("|")
+            .includes(userAnswer);
 
-    if (data.correct) {
+    }
+
+    else if (type === "unordered") {
+
+        const normalize = text =>
+            text
+                .replace(/[、,]/g, " ")
+                .split(/\s+/)
+                .filter(Boolean)
+                .sort()
+                .join(" ")
+                .toLowerCase();
+
+        correct =
+            normalize(userAnswer) ===
+            normalize(correctAnswer);
+
+    }
+
+    if (correct) {
 
         result.textContent = "⭕ 正解！";
 
     } else {
 
-        result.textContent = `❌ 不正解\n正解：${data.answer}`;
+        result.textContent =
+            `❌ 不正解\n正解：${currentQuestion.answer}`;
 
     }
+
 }
 
 submitBtn.addEventListener("click", submitAnswer);
 
-nextBtn.addEventListener("click", loadQuiz);
+nextBtn.addEventListener("click", nextQuiz);
 
-// 最初の問題
-loadQuiz();
+loadQuestions();
