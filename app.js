@@ -8,6 +8,9 @@ const result = document.getElementById("result");
 const submitBtn = document.getElementById("submit");
 const nextBtn = document.getElementById("next");
 const categorySelect = document.getElementById("categorySelect");
+const hintBtn = document.getElementById("hint");
+
+let revealedIndexes = [];
 
 let questions = [];
 let currentQuestion = null;
@@ -54,6 +57,7 @@ function nextQuiz() {
 
     result.textContent = "";
     answer.value = "";
+    revealedIndexes = [];
 
     // 選択中カテゴリ
     const selectedCategory = categorySelect.value;
@@ -97,7 +101,56 @@ function nextQuiz() {
     question.textContent = currentQuestion.question;
 
 }
+function showHint() {
 
+    if (!currentQuestion) return;
+
+    const ans = String(currentQuestion.answer);
+
+    // 開示できる文字を取得
+    const candidates = [];
+
+    for (let i = 2; i < ans.length; i++) {
+
+        if (
+            ans[i] !== " " &&
+            ans[i] !== "　" &&
+            ans[i] !== "、" &&
+            ans[i] !== "|" &&
+            !revealedIndexes.includes(i)
+        ) {
+            candidates.push(i);
+        }
+    }
+
+    if (candidates.length === 0) {
+        result.textContent = "これ以上ヒントはありません";
+        return;
+    }
+
+    // ランダムで1文字公開
+    const index =
+        candidates[Math.floor(Math.random() * candidates.length)];
+
+    revealedIndexes.push(index);
+
+    const hint = ans
+        .split("")
+        .map((ch, i) => {
+
+            if (i < 2) return ch;
+
+            if (revealedIndexes.includes(i)) return ch;
+
+            if (" 、|　".includes(ch)) return ch;
+
+            return "◯";
+        })
+        .join("");
+
+    result.textContent =
+        `💡 ${hint}`;
+}
 // 正解判定
 function submitAnswer() {
 
@@ -163,7 +216,7 @@ function submitAnswer() {
 }
 
 submitBtn.addEventListener("click", submitAnswer);
-
+hintBtn.addEventListener("click", showHint);
 nextBtn.addEventListener("click", nextQuiz);
 categorySelect.addEventListener("change", () => {
     recentQuestions = [];
