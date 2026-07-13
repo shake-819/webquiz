@@ -207,7 +207,7 @@ function submitAnswer() {
     } else {
 
         result.textContent =
-            `❌ 不正解\n正解：${currentQuestion.answer}`;
+            `❌ 不正解`;
 
     }
 
