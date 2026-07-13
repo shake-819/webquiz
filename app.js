@@ -207,7 +207,7 @@ function submitAnswer() {
     } else {
 
         result.textContent =
-            `❌ 不正解`;
+            "❌ 不正解";
 
     }
 
