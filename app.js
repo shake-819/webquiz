@@ -225,7 +225,25 @@ async function testSupabase(){
 }
 
 testSupabase();
-submitBtn.addEventListener("click", submitAnswer);
+
+async function addTestUser(){
+
+    const { data, error } =
+        await supabaseClient
+        .from("users")
+        .insert({
+            name:"test",
+            score:100,
+            correct:5,
+            wrong:2
+        });
+
+    console.log(data);
+    console.log(error);
+}
+
+addTestUser();
+submitBtn.("click", submitAnswer);
 hintBtn.addEventListener("click", showHint);
 nextBtn.addEventListener("click", nextQuiz);
 categorySelect.addEventListener("change", () => {
