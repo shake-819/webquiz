@@ -138,8 +138,6 @@ function showHint() {
         .split("")
         .map((ch, i) => {
 
-            if (i < 2) return ch;
-
             if (revealedIndexes.includes(i)) return ch;
 
             if (" 、|　".includes(ch)) return ch;
