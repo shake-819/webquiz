@@ -12,7 +12,7 @@ const categorySelect = document.getElementById("categorySelect");
 let questions = [];
 let currentQuestion = null;
 let recentQuestions = [];
-
+let categoryMap = {};
 async function loadQuestions() {
 
     const res = await fetch(API_URL);
@@ -39,6 +39,14 @@ async function loadQuestions() {
         option.textContent = c;
         categorySelect.appendChild(option);
     });
+    categoryMap = {};
+
+    questions.forEach(q => {
+        if (!categoryMap[q.category]) {
+            categoryMap[q.category] = [];
+        }
+    categoryMap[q.category].push(q);
+    });
 
     nextQuiz();
 }
@@ -50,11 +58,10 @@ function nextQuiz() {
     // 選択中カテゴリ
     const selectedCategory = categorySelect.value;
 
-    // カテゴリで絞り込み
-    let filtered =
-        selectedCategory === "all"
-            ? questions
-            : questions.filter(q => q.category === selectedCategory);
+    const filtered =
+    categorySelect.value === "all"
+        ? questions
+        : categoryMap[categorySelect.value];
 
     let available =
         filtered.filter(q =>
