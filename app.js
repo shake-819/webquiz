@@ -110,7 +110,7 @@ function showHint() {
     // 開示できる文字を取得
     const candidates = [];
 
-    for (let i = 2; i < ans.length; i++) {
+    for (let i = 0; i < ans.length; i++) {
 
         if (
             ans[i] !== " " &&
