@@ -7,12 +7,12 @@ const result = document.getElementById("result");
 
 const submitBtn = document.getElementById("submit");
 const nextBtn = document.getElementById("next");
+const categorySelect = document.getElementById("categorySelect");
 
 let questions = [];
 let currentQuestion = null;
 let recentQuestions = [];
 
-// 問題取得
 async function loadQuestions() {
 
     const res = await fetch(API_URL);
@@ -25,18 +25,39 @@ async function loadQuestions() {
     else
         questions = [];
 
+    // カテゴリ一覧を作成
+    const categories = [...new Set(
+        questions.map(q => q.category)
+    )];
+
+    categorySelect.innerHTML =
+        '<option value="all">すべて</option>';
+
+    categories.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c;
+        option.textContent = c;
+        categorySelect.appendChild(option);
+    });
+
     nextQuiz();
-
 }
-
-// 次の問題
 function nextQuiz() {
 
     result.textContent = "";
     answer.value = "";
 
+    // 選択中カテゴリ
+    const selectedCategory = categorySelect.value;
+
+    // カテゴリで絞り込み
+    let filtered =
+        selectedCategory === "all"
+            ? questions
+            : questions.filter(q => q.category === selectedCategory);
+
     let available =
-        questions.filter(q =>
+        filtered.filter(q =>
             !recentQuestions.includes(q.id)
         );
 
@@ -44,8 +65,15 @@ function nextQuiz() {
 
         recentQuestions = [];
 
-        available = questions;
+        available = filtered;
 
+    }
+
+    if (available.length === 0) {
+        question.textContent = "このカテゴリには問題がありません。";
+        category.textContent = "";
+        currentQuestion = null;
+        return;
     }
 
     currentQuestion =
@@ -130,5 +158,9 @@ function submitAnswer() {
 submitBtn.addEventListener("click", submitAnswer);
 
 nextBtn.addEventListener("click", nextQuiz);
+categorySelect.addEventListener("change", () => {
+    recentQuestions = [];
+    nextQuiz();
+});
 
 loadQuestions();
