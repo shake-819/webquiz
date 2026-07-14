@@ -215,19 +215,22 @@ function submitAnswer() {
 
 async function addTestUser(){
 
-    const { data, error } =
-        await supabaseClient
-        .from("users")
-        .insert({
-            name:"test",
-            score:100,
-            correct:5,
-            wrong:2
-        })
-        .select();
+    const { data, error } = await supabaseClient
+      .from("users")
+      .insert({
+        name: "test",
+        score: 100,
+        correct: 5,
+        wrong: 2
+      })
+      .select();
 
-    console.log(data);
-    console.log(error);
+    console.log("data:", data);
+    console.log("error:", error);
+    console.log("message:", error?.message);
+    console.log("details:", error?.details);
+    console.log("hint:", error?.hint);
+    console.log("code:", error?.code);
 }
 // testSupabase();
 
