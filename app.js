@@ -16,6 +16,21 @@ let questions = [];
 let currentQuestion = null;
 let recentQuestions = [];
 let categoryMap = {};
+checkLogin();
+
+async function checkLogin() {
+
+    const {
+        data: { session }
+    } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+
+        location.href = "login.html";
+
+    }
+
+}
 async function loadQuestions() {
 
     const res = await fetch(API_URL);
@@ -212,34 +227,22 @@ function submitAnswer() {
     }
 
 }
+document
+.getElementById("logout")
+.addEventListener("click", logout);
 
-async function addTestUser(){
+async function logout(){
 
-    const { data, error } = await supabaseClient
-      .from("users")
-      .insert({
-        name: "test",
-        score: 100,
-        correct: 5,
-        wrong: 2
-      })
-      .select();
+    await supabaseClient.auth.signOut();
 
-    console.log("data:", data);
-    console.log("error:", error);
-    console.log("message:", error?.message);
-    console.log("details:", error?.details);
-    console.log("hint:", error?.hint);
-    console.log("code:", error?.code);
+    location.href = "login.html";
+
 }
-// testSupabase();
 
-addTestUser();
 
 submitBtn?.addEventListener("click", submitAnswer);
 hintBtn?.addEventListener("click", showHint);
 nextBtn?.addEventListener("click", nextQuiz);
-
 categorySelect?.addEventListener("change", () => {
     recentQuestions = [];
     nextQuiz();
