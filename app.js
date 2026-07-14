@@ -213,16 +213,6 @@ function submitAnswer() {
 
 }
 
-async function testSupabase(){
-
-    const { data, error } =
-        await supabaseClient
-        .from("test")
-        .select("*");
-
-    console.log(data);
-    console.log(error);
-}
 
 testSupabase();
 async function addTestUser(){
