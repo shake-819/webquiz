@@ -225,7 +225,6 @@ async function testSupabase(){
 }
 
 testSupabase();
-
 async function addTestUser(){
 
     const { data, error } =
@@ -236,15 +235,14 @@ async function addTestUser(){
             score:100,
             correct:5,
             wrong:2
-        });
-        .select()
+        })
+        .select();
 
     console.log(data);
     console.log(error);
 }
-
 addTestUser();
-submitBtn.("click", submitAnswer);
+submitBtn.addEventListener("click", submitAnswer);
 hintBtn.addEventListener("click", showHint);
 nextBtn.addEventListener("click", nextQuiz);
 categorySelect.addEventListener("change", () => {
