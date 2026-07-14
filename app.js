@@ -237,6 +237,7 @@ async function addTestUser(){
             correct:5,
             wrong:2
         });
+        .select()
 
     console.log(data);
     console.log(error);
