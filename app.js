@@ -241,11 +241,15 @@ async function addTestUser(){
     console.log(data);
     console.log(error);
 }
+// testSupabase();
+
 addTestUser();
-submitBtn.addEventListener("click", submitAnswer);
-hintBtn.addEventListener("click", showHint);
-nextBtn.addEventListener("click", nextQuiz);
-categorySelect.addEventListener("change", () => {
+
+submitBtn?.addEventListener("click", submitAnswer);
+hintBtn?.addEventListener("click", showHint);
+nextBtn?.addEventListener("click", nextQuiz);
+
+categorySelect?.addEventListener("change", () => {
     recentQuestions = [];
     nextQuiz();
 });
