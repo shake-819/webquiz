@@ -213,8 +213,6 @@ function submitAnswer() {
 
 }
 
-
-testSupabase();
 async function addTestUser(){
 
     const { data, error } =
