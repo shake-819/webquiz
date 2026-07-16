@@ -165,7 +165,7 @@ function showHint() {
         `💡 ${hint}`;
 }
 // 正解判定
-function submitAnswer() {
+async function submitAnswer() {
 
     if (!currentQuestion) return;
 
@@ -221,8 +221,124 @@ function submitAnswer() {
 
     } else {
 
-        result.textContent =
-            "❌ 不正解";
+        result.textContent = "❌ 不正解";
+
+    }
+
+    // ----------------------------
+    // ここからSupabase更新
+    // ----------------------------
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) return;
+
+    // ユーザー情報取得
+    const { data: profile, error } =
+        await supabaseClient
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !profile) {
+        console.error(error);
+        return;
+    }
+
+    // users更新
+    const updateData = {
+        score: profile.score + (correct ? 1 : 0),
+        correct: profile.correct + (correct ? 1 : 0),
+        wrong: profile.wrong + (correct ? 0 : 1)
+    };
+
+    await supabaseClient
+        .from("users")
+        .update(updateData)
+        .eq("id", user.id);
+
+    // Freeならここで終了
+    if (profile.plan === "free") return;
+
+    // ==========================
+    // Premium限定 科目集計
+    // ==========================
+
+    const { data: categoryStat } =
+        await supabaseClient
+        .from("user_category_stats")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("category", currentQuestion.category)
+        .maybeSingle();
+
+    if (!categoryStat) {
+
+        await supabaseClient
+            .from("user_category_stats")
+            .insert({
+                user_id: user.id,
+                category: currentQuestion.category,
+                correct: correct ? 1 : 0,
+                wrong: correct ? 0 : 1
+            });
+
+    } else {
+
+        await supabaseClient
+            .from("user_category_stats")
+            .update({
+                correct:
+                    categoryStat.correct + (correct ? 1 : 0),
+                wrong:
+                    categoryStat.wrong + (correct ? 0 : 1)
+            })
+            .eq("id", categoryStat.id);
+
+    }
+
+    // ==========================
+    // Premium限定 日別集計
+    // ==========================
+
+    const today =
+        new Date().toISOString().slice(0, 10);
+
+    const { data: dailyStat } =
+        await supabaseClient
+        .from("user_daily_stats")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("date", today)
+        .eq("category", currentQuestion.category)
+        .maybeSingle();
+
+    if (!dailyStat) {
+
+        await supabaseClient
+            .from("user_daily_stats")
+            .insert({
+                user_id: user.id,
+                date: today,
+                category: currentQuestion.category,
+                correct: correct ? 1 : 0,
+                wrong: correct ? 0 : 1
+            });
+
+    } else {
+
+        await supabaseClient
+            .from("user_daily_stats")
+            .update({
+                correct:
+                    dailyStat.correct + (correct ? 1 : 0),
+                wrong:
+                    dailyStat.wrong + (correct ? 0 : 1)
+            })
+            .eq("id", dailyStat.id);
 
     }
 
