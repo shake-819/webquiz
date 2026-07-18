@@ -345,6 +345,67 @@ async function submitAnswer() {
     }
 
 }
+async function loadChat() {
+
+    const { data } = await supabaseClient
+        .from("chat_messages")
+        .select("*")
+        .order("created_at", { ascending: true })
+        .limit(30);
+
+    const messages =
+        document.getElementById("messages");
+
+    messages.innerHTML = "";
+
+    data.forEach(msg => {
+
+        messages.innerHTML += `
+            <p>
+                <b>${msg.user_name}</b><br>
+                ${msg.message}
+            </p>
+        `;
+
+    });
+
+}
+async function sendChat() {
+
+    const input =
+        document.getElementById("chatInput");
+
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    const {
+        data: { user }
+    } =
+    await supabaseClient.auth.getUser();
+
+    const {
+        data: profile
+    } =
+    await supabaseClient
+        .from("users")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+    await supabaseClient
+        .from("chat_messages")
+        .insert({
+
+            user_id: user.id,
+            user_name: profile.name,
+            message: message
+
+        });
+
+    input.value = "";
+
+}
 document
 .getElementById("logout")
 .addEventListener("click", logout);
@@ -367,3 +428,35 @@ categorySelect?.addEventListener("change", () => {
 });
 
 loadQuestions();
+loadChat();
+
+document
+.getElementById("sendChat")
+.addEventListener("click", sendChat);
+supabaseClient
+
+.channel("chat")
+
+.on(
+
+    "postgres_changes",
+
+    {
+
+        event: "INSERT",
+
+        schema: "public",
+
+        table: "chat_messages"
+
+    },
+
+    payload => {
+
+        loadChat();
+
+    }
+
+)
+
+.subscribe();
