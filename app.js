@@ -285,7 +285,7 @@ async function submitAnswer() {
             .insert({
                 user_id: user.id,
                 category: currentQuestion.category,
-                correct: (correct && !usedHint) ? 1 : 0
+                correct: (correct && !usedHint) ? 1 : 0,
                 wrong: correct ? 0 : 1
             });
 
@@ -295,9 +295,9 @@ async function submitAnswer() {
             .from("user_category_stats")
             .update({
                 correct:
-                    categoryStat.correct + ((correct && !usedHint) ? 1 : 0)
+                    categoryStat.correct + ((correct && !usedHint) ? 1 : 0),
                 wrong:
-                    categoryStat.wrong + (correct ? 0 : 1)
+                    categoryStat.wrong + (correct ? 0 : 1),
             })
             .eq("id", categoryStat.id);
 
