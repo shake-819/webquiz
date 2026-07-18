@@ -6,8 +6,14 @@ loginBtn?.addEventListener("click", login);
 
 async function register() {
 
-    const email = document.getElementById("email").value;
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
+
+    if (!name || !email || !password) {
+        alert("すべて入力してください");
+        return;
+    }
 
     const { data, error } =
         await supabaseClient.auth.signUp({
@@ -20,22 +26,24 @@ async function register() {
         return;
     }
 
-    // 登録したユーザー
     const user = data.user;
 
-    // usersテーブルに初期データを作成
     const { error: insertError } =
         await supabaseClient
             .from("users")
             .insert({
                 id: user.id,
+                name: name,
                 score: 0,
                 correct: 0,
-                wrong: 0
+                wrong: 0,
+                plan: "free"
             });
 
     if (insertError) {
         console.error(insertError);
+        alert(insertError.message);
+        return;
     }
 
     alert("登録しました");
