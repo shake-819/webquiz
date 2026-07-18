@@ -217,16 +217,6 @@ async function submitAnswer() {
 
     }
 
-    if (correct) {
-
-        result.textContent = `⭕ 正解！`\n`現在${newCorrect}問正解`;
-
-    } else {
-
-        result.textContent = "❌ 不正解";
-
-    }
-
     // ----------------------------
     // ここからSupabase更新
     // ----------------------------
@@ -249,11 +239,22 @@ async function submitAnswer() {
         console.error(error);
         return;
     }
+    const newCorrect = profile.correct + (correct && !usedHint ? 1 : 0);
+    if (correct) {
+
+    result.textContent =
+        `⭕ 正解！\n現在${newCorrect}問正解`;
+
+    } else {
+
+        result.textContent =
+            `❌ 不正解`;
+    }
 
     // users更新
     const updateData = {
-        score: profile.score + (correct && !usedHint ? 1 : 0)
-        correct: profile.correct + (correct && !usedHint ? 1 : 0)
+        score: profile.score + (correct && !usedHint ? 1 : 0),
+        correct: profile.correct + (correct && !usedHint ? 1 : 0),
         wrong: profile.wrong + (correct ? 0 : 1)
     };
 
@@ -284,7 +285,7 @@ async function submitAnswer() {
             .insert({
                 user_id: user.id,
                 category: currentQuestion.category,
-                correct: correct ? 1 : 0,
+                correct: (correct && !usedHint) ? 1 : 0
                 wrong: correct ? 0 : 1
             });
 
@@ -294,7 +295,7 @@ async function submitAnswer() {
             .from("user_category_stats")
             .update({
                 correct:
-                    categoryStat.correct + (correct ? 1 : 0),
+                    categoryStat.correct + ((correct && !usedHint) ? 1 : 0)
                 wrong:
                     categoryStat.wrong + (correct ? 0 : 1)
             })
@@ -326,7 +327,7 @@ async function submitAnswer() {
                 user_id: user.id,
                 date: today,
                 category: currentQuestion.category,
-                correct: correct ? 1 : 0,
+                correct: (correct && !usedHint) ? 1 : 0
                 wrong: correct ? 0 : 1
             });
 
@@ -336,7 +337,7 @@ async function submitAnswer() {
             .from("user_daily_stats")
             .update({
                 correct:
-                    dailyStat.correct + (correct ? 1 : 0),
+                    dailyStat.correct + ((correct && !usedHint) ? 1 : 0)
                 wrong:
                     dailyStat.wrong + (correct ? 0 : 1)
             })
