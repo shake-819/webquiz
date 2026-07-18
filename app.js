@@ -346,10 +346,11 @@ async function submitAnswer() {
     }
 
 }
-const {
-    data: { user }
-} = await supabaseClient.auth.getUser();
+
 async function loadChat() {
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
 
     const { data } = await supabaseClient
         .from("chat_messages")
@@ -413,7 +414,7 @@ async function sendChat() {
         
 
     input.value = "";
-    loadchat();
+    loadChat();
 
 }
 const chatInput = document.getElementById("chatInput");
