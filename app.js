@@ -327,7 +327,7 @@ async function submitAnswer() {
                 user_id: user.id,
                 date: today,
                 category: currentQuestion.category,
-                correct: (correct && !usedHint) ? 1 : 0
+                correct: (correct && !usedHint) ? 1 : 0,
                 wrong: correct ? 0 : 1
             });
 
@@ -337,7 +337,7 @@ async function submitAnswer() {
             .from("user_daily_stats")
             .update({
                 correct:
-                    dailyStat.correct + ((correct && !usedHint) ? 1 : 0)
+                    dailyStat.correct + ((correct && !usedHint) ? 1 : 0),
                 wrong:
                     dailyStat.wrong + (correct ? 0 : 1)
             })
