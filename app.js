@@ -11,7 +11,7 @@ const categorySelect = document.getElementById("categorySelect");
 const hintBtn = document.getElementById("hint");
 
 let revealedIndexes = [];
-
+let usedHint = false;
 let questions = [];
 let currentQuestion = null;
 let recentQuestions = [];
@@ -71,6 +71,7 @@ async function loadQuestions() {
 function nextQuiz() {
 
     result.textContent = "";
+    usedHint = false;
     answer.value = "";
     revealedIndexes = [];
 
@@ -117,6 +118,7 @@ function nextQuiz() {
 
 }
 function showHint() {
+    usedHint = true;
 
     if (!currentQuestion) return;
 
@@ -217,7 +219,7 @@ async function submitAnswer() {
 
     if (correct) {
 
-        result.textContent = "⭕ 正解！";
+        result.textContent = `⭕ 正解！`\n`現在${newCorrect}問正解`;
 
     } else {
 
@@ -250,8 +252,8 @@ async function submitAnswer() {
 
     // users更新
     const updateData = {
-        score: profile.score + (correct ? 1 : 0),
-        correct: profile.correct + (correct ? 1 : 0),
+        score: profile.score + (correct && !usedHint ? 1 : 0)
+        correct: profile.correct + (correct && !usedHint ? 1 : 0)
         wrong: profile.wrong + (correct ? 0 : 1)
     };
 
