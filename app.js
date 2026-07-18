@@ -346,6 +346,9 @@ async function submitAnswer() {
     }
 
 }
+const {
+    data: { user }
+} = await supabaseClient.auth.getUser();
 async function loadChat() {
 
     const { data } = await supabaseClient
@@ -353,8 +356,7 @@ async function loadChat() {
         .select("*")
         .order("created_at", { ascending: true })
         .limit(30);
-        console.log(data);
-        console.log(error);
+        
 
     const messages =
         document.getElementById("messages");
@@ -363,14 +365,17 @@ async function loadChat() {
 
     data.forEach(msg => {
 
+        const mine = msg.user_id === user.id;
+
         messages.innerHTML += `
-            <p>
-                <b>${msg.user_name}</b><br>
-                ${msg.message}
-            </p>
+            <div class="message ${mine ? "mine" : "other"}">
+                <div class="name">${msg.user_name}</div>
+                <div class="bubble">${msg.message}</div>
+            </div>
         `;
 
     });
+    messages.scrollTop = messages.scrollHeight;
 
 }
 async function sendChat() {
@@ -405,12 +410,24 @@ async function sendChat() {
             message: message
 
         });
-        console.log(data);
-        console.log(error);
+        
 
     input.value = "";
+    loadchat();
 
 }
+const chatInput = document.getElementById("chatInput");
+
+chatInput.addEventListener("keydown", (e) => {
+
+    if (e.key === "Enter" && !e.shiftKey) {
+
+        e.preventDefault();
+        sendChat();
+
+    }
+
+});
 document
 .getElementById("logout")
 .addEventListener("click", logout);
