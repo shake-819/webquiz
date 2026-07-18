@@ -85,15 +85,6 @@ button {
     min-height: 40px;
     margin: 15px 0;
 }
-.container{
-    display:flex;
-    gap:20px;
-}
-
-.quiz{
-    flex:2;
-}
-
 .chat{
     width:300px;
     border:1px solid #ccc;
