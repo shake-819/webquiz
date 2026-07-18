@@ -353,6 +353,8 @@ async function loadChat() {
         .select("*")
         .order("created_at", { ascending: true })
         .limit(30);
+        console.log(data);
+        console.log(error);
 
     const messages =
         document.getElementById("messages");
@@ -403,6 +405,8 @@ async function sendChat() {
             message: message
 
         });
+        console.log(data);
+        console.log(error);
 
     input.value = "";
 
