@@ -72,7 +72,7 @@ async function login() {
 
     } else {
 
-        location.href = "index.html";
+        location.href = "toppage.html";
 
     }
 }
