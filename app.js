@@ -240,15 +240,22 @@ async function submitAnswer() {
         return;
     }
     const newCorrect = profile.correct + (correct && !usedHint ? 1 : 0);
+
     if (correct) {
 
-    result.textContent =
-        `⭕ 正解！\n現在${newCorrect}問正解`;
+        result.textContent =
+            `⭕ 正解！\n現在${newCorrect}問正解`;
+
+        answer.value = "";
+
+        setTimeout(() => {
+            nextQuiz();
+        }, 500);   // 0なら即切り替え、500なら0.5秒後
 
     } else {
 
-        result.textContent =
-            `❌ 不正解`;
+        result.textContent = "❌ 不正解";
+        answer.value = "";
     }
 
     // users更新
