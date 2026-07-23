@@ -412,12 +412,31 @@ async function sendChat() {
     await supabaseClient
         .from("chat_messages")
         .insert({
-
             user_id: user.id,
             user_name: profile.name,
             message: message
-
         });
+    // メッセージ数を確認
+    const { count } = await supabaseClient
+        .from("chat_messages")
+        .select("*", { count: "exact", head: true });
+
+    if (count > 20) {
+
+        // 最新20件以外を削除
+        const { data: latest } = await supabaseClient
+            .from("chat_messages")
+            .select("id")
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+        const ids = latest.map(row => row.id);
+
+        await supabaseClient
+            .from("chat_messages")
+            .delete()
+            .not("id", "in", `(${ids.join(",")})`);
+    }
         
 
     input.value = "";
