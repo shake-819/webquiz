@@ -424,20 +424,6 @@ async function sendChat() {
     loadChat();
 
 }
-await supabaseClient
-  .from("chat_messages")
-  .delete()
-  .not(
-    "id",
-    "in",
-    `(${(
-      await supabaseClient
-        .from("chat_messages")
-        .select("id")
-        .order("created_at", { ascending: false })
-        .limit(20)
-    ).data.map(x => x.id).join(",")})`
-  );
 const chatInput = document.getElementById("chatInput");
 
 chatInput.addEventListener("keydown", (e) => {
