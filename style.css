@@ -85,23 +85,46 @@ button {
     min-height: 40px;
     margin: 15px 0;
 }
-.chat{
-    width:300px;
-    border:1px solid #ccc;
-    padding:10px;
-}
-#messages{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-
-.message{
-    display:flex;
-    flex-direction:column;
-    max-width:70%;
+.chat {
+    width: 320px;
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
+/* メッセージ欄 */
+#messages {
+    height: 300px;          /* 高さ固定 */
+    overflow-y: auto;       /* 縦スクロール */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    background: #f8f8f8;
+    word-break: break-word; /* 長文でもはみ出さない */
+}
+
+/* メッセージ */
+.message {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: white;
+    border-radius: 6px;
+}
+
+/* 入力欄 */
+#chatInput {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ボタン */
+#sendChat {
+    width: 100%;
+}
 .mine{
     align-self:flex-end;
     text-align:right;
