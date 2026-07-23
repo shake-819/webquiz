@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Master | ホーム</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Poppins",sans-serif;
+}
+
+body{
+    background:#f4f6fb;
+    color:#333;
+}
+
+/* ===== ヘッダー ===== */
+
+header{
+    background:#4f46e5;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 40px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+
+header h1{
+    font-size:28px;
+}
+
+nav{
+    display:flex;
+    gap:20px;
+}
+
+nav button{
+    background:none;
+    border:none;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:bold;
+}
+
+/* ===== ヒーロー ===== */
+
+.hero{
+    background:linear-gradient(135deg,#4f46e5,#6d5dfc);
+    color:white;
+    text-align:center;
+    padding:80px 20px;
+}
+
+.hero h2{
+    font-size:48px;
+    margin-bottom:20px;
+}
+
+.hero p{
+    font-size:20px;
+    margin-bottom:35px;
+}
+
+.hero button{
+    padding:18px 45px;
+    font-size:20px;
+    background:#FFD43B;
+    color:#333;
+    border:none;
+    border-radius:50px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.hero button:hover{
+    transform:scale(1.05);
+}
+
+/* ===== 共通 ===== */
+
+.container{
+    width:90%;
+    max-width:1100px;
+    margin:auto;
+}
+
+section{
+    margin-top:60px;
+}
+
+.title{
+    font-size:30px;
+    margin-bottom:20px;
+}
+
+/* ===== 成績 ===== */
+
+.stats{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:20px;
+}
+
+.card{
+    width:220px;
+    background:white;
+    border-radius:18px;
+    padding:25px;
+    text-align:center;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.card h3{
+    color:#4f46e5;
+    margin-bottom:15px;
+}
+
+.card p{
+    font-size:28px;
+    font-weight:bold;
+}
+
+/* ===== ランキング ===== */
+
+.rank{
+    background:white;
+    border-radius:18px;
+    padding:30px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.rank ul{
+    list-style:none;
+}
+
+.rank li{
+    display:flex;
+    justify-content:space-between;
+    padding:15px 0;
+    border-bottom:1px solid #eee;
+    font-size:18px;
+}
+
+/* ===== Premium ===== */
+
+.premium{
+    background:linear-gradient(135deg,#FFD43B,#ffb300);
+    border-radius:20px;
+    padding:40px;
+    text-align:center;
+}
+
+.premium h2{
+    margin-bottom:20px;
+}
+
+.premium ul{
+    list-style:none;
+    margin:25px 0;
+}
+
+.premium li{
+    margin:10px 0;
+    font-size:18px;
+}
+
+.premium button{
+    padding:15px 35px;
+    background:#4f46e5;
+    color:white;
+    border:none;
+    border-radius:30px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+/* ===== お知らせ ===== */
+
+.notice{
+    background:white;
+    border-radius:18px;
+    padding:30px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.notice ul{
+    margin-left:20px;
+}
+
+.notice li{
+    margin:12px 0;
+}
+
+/* ===== フッター ===== */
+
+footer{
+    margin-top:70px;
+    background:#222;
+    color:white;
+    text-align:center;
+    padding:30px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>🎯 Quiz Master</h1>
+
+<nav>
+    <button onclick="location.href='index.html'">クイズ</button>
+    <button onclick="location.href='mypage.html'">マイページ</button>
+    <button onclick="location.href='premium.html'">Premium</button>
+    <button id="logout">ログアウト</button>
+</nav>
+
+</header>
+
+<section class="hero">
+
+<h2>クイズで学ぼう。</h2>
+
+<p>毎日挑戦して知識を増やし、ランキング上位を目指そう！</p>
+
+<button onclick="location.href='index.html'">
+クイズを始める
+</button>
+
+</section>
+
+<div class="container">
+
+<section>
+
+<h2 class="title">📊 あなたの成績</h2>
+
+<div class="stats">
+
+<div class="card">
+<h3>⭐ スコア</h3>
+<p id="score">0</p>
+</div>
+
+<div class="card">
+<h3>⭕ 正解数</h3>
+<p id="correct">0</p>
+</div>
+
+<div class="card">
+<h3>📈 正答率</h3>
+<p id="rate">0%</p>
+</div>
+
+</div>
+
+</section>
+
+<section>
+
+<h2 class="title">🏆 ランキング</h2>
+
+<div class="rank">
+
+<ul id="ranking">
+
+<li>読み込み中...</li>
+
+</ul>
+
+</div>
+
+</section>
+
+<section>
+
+<div class="premium">
+
+<h2>👑 Premium</h2>
+
+<p>Premium限定機能</p>
+
+<ul>
+<li>🤖 AIチャット</li>
+<li>📊 学習分析</li>
+<li>📅 学習履歴</li>
+<li>📈 科目ごとの成績表示</li>
+</ul>
+
+<button onclick="location.href='premium.html'">
+Premiumになる
+</button>
+
+</div>
+
+</section>
+
+<section>
+
+<h2 class="title">📢 お知らせ</h2>
+
+<div class="notice">
+
+<ul>
+
+<li>新しい問題を追加しました！</li>
+<li>Premium機能をアップデートしました。</li>
+<li>ランキング機能公開中！</li>
+
+</ul>
+
+</div>
+
+</section>
+
+</div>
+
+<footer>
+
+<p>© 2026 Quiz Master</p>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="supabase.js"></script>
+<script src="toppage.js"></script>
+
+</body>
+</html>
