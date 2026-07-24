@@ -402,12 +402,20 @@ async function sendChat() {
 
     const {
         data: profile
-    } =
+    }
+    =
     await supabaseClient
         .from("users")
-        .select("name")
+        .select("name, plan")
         .eq("id", user.id)
         .single();
+    if (profile.plan !== "premium") {
+
+        alert("Premiumプラン限定機能です");
+
+        return;
+
+    }
 
     await supabaseClient
         .from("chat_messages")
@@ -416,29 +424,6 @@ async function sendChat() {
             user_name: profile.name,
             message: message
         });
-    // メッセージ数を確認
-    const { count } = await supabaseClient
-        .from("chat_messages")
-        .select("*", { count: "exact", head: true });
-
-    if (count > 20) {
-
-        // 最新20件以外を削除
-        const { data: latest } = await supabaseClient
-            .from("chat_messages")
-            .select("id")
-            .order("created_at", { ascending: false })
-            .limit(20);
-
-        const ids = latest.map(row => row.id);
-
-        await supabaseClient
-            .from("chat_messages")
-            .delete()
-            .not("id", "in", `(${ids.join(",")})`);
-    }
-        
-
     input.value = "";
     loadChat();
 
