@@ -3,7 +3,7 @@
 
     const {
         data: { session },
-    } = await supabase.auth.getSession();
+    } = await supabaseClient.auth.getSession();
 
     if (!session) {
         location.href = "login.html";
@@ -13,7 +13,7 @@
     const user = session.user;
 
     // 自分のデータ取得
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await supabaseClient
         .from("users")
         .select("*")
         .eq("id", user.id)
@@ -51,7 +51,7 @@
 // ランキング取得
 (async () => {
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("users")
         .select("name,score")
         .order("score", { ascending: false })
@@ -66,40 +66,29 @@
 
     ranking.innerHTML = "";
 
-    data.forEach((user, index) => {
+    const medals = ["🥇","🥈","🥉"];
+
+    data.forEach((user,index)=>{
+
+        const rank = index < 3
+            ? medals[index]
+            : `${index+1}位`;
 
         ranking.innerHTML += `
-            <li>
-                <span>${index + 1}位 ${user.name}</span>
-                <span>${user.score}pt</span>
-            </li>
+        <li>
+            <span>${rank} ${user.name}</span>
+            <span>${user.score}pt</span>
+        </li>
         `;
 
     });
 
 })();
-const medals = ["🥇","🥈","🥉"];
-
-data.forEach((user,index)=>{
-
-    const rank = index < 3
-        ? medals[index]
-        : `${index+1}位`;
-
-    ranking.innerHTML += `
-    <li>
-        <span>${rank} ${user.name}</span>
-        <span>${user.score}pt</span>
-    </li>
-    `;
-
-});
-
 
 // ログアウト
 document.getElementById("logout").addEventListener("click", async () => {
 
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
         alert("ログアウトに失敗しました");
