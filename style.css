@@ -113,6 +113,8 @@ button {
     padding: 6px 10px;
     background: white;
     border-radius: 6px;
+    width: fit-content;
+    max-width: 80%;
 }
 
 /* 入力欄 */
@@ -125,20 +127,25 @@ button {
 #sendChat {
     width: 100%;
 }
-.mine{
-    align-self:flex-end;
-    text-align:right;
+.mine {
+    align-self: flex-end;
+    text-align: right;
+    width: fit-content;
+    max-width: 80%;
 }
 
-.other{
-    align-self:flex-start;
+.other {
+    align-self: flex-start;
+    width: fit-content;
+    max-width: 80%;
 }
 
-.bubble{
-    padding:10px 14px;
-    border-radius:15px;
-    background:#eee;
-    word-break:break-word;
+.bubble {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 15px;
+    background: #eee;
+    word-break: break-word;
 }
 
 .mine .bubble{
