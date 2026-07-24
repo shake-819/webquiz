@@ -25,8 +25,11 @@
     }
 
     // スコア
-    document.getElementById("score").textContent =
-        profile.score ?? 0;
+    const score =
+        (profile.correct ?? 0) +
+        (profile.wrong ?? 0);
+
+    document.getElementById("score").textContent = score;
 
     // 正解数
     document.getElementById("correct").textContent =
