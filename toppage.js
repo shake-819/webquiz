@@ -78,6 +78,22 @@
     });
 
 })();
+const medals = ["🥇","🥈","🥉"];
+
+data.forEach((user,index)=>{
+
+    const rank = index < 3
+        ? medals[index]
+        : `${index+1}位`;
+
+    ranking.innerHTML += `
+    <li>
+        <span>${rank} ${user.name}</span>
+        <span>${user.score}pt</span>
+    </li>
+    `;
+
+});
 
 
 // ログアウト
