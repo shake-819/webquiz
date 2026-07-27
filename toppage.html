@@ -50,39 +50,121 @@ nav button{
     font-weight:bold;
 }
 
-/* ===== ヒーロー ===== */
-
 .hero{
-    background:linear-gradient(135deg,#4f46e5,#6d5dfc);
-    color:white;
-    text-align:center;
-    padding:80px 20px;
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+padding:70px 8%;
+
+background:linear-gradient(135deg,#4f46e5,#6d5dfc);
+
+color:white;
+
+}
+
+.hero-left{
+
+width:48%;
+
+}
+
+.hero-right{
+
+width:45%;
+display:flex;
+justify-content:center;
+
+}
+
+.hero-right img{
+
+width:100%;
+max-width:450px;
+
+}
+
+.hero-tag{
+
+display:inline-block;
+
+padding:8px 18px;
+
+background:white;
+
+color:#4f46e5;
+
+border-radius:50px;
+
+font-weight:bold;
+
+margin-bottom:25px;
+
 }
 
 .hero h2{
-    font-size:48px;
-    margin-bottom:20px;
+
+font-size:56px;
+
+line-height:1.2;
+
+margin-bottom:20px;
+
 }
 
 .hero p{
-    font-size:20px;
-    margin-bottom:35px;
+
+font-size:20px;
+
+line-height:1.8;
+
+margin-bottom:35px;
+
+opacity:.95;
+
+}
+
+.hero-buttons{
+
+display:flex;
+
+gap:15px;
+
 }
 
 .hero button{
-    padding:18px 45px;
-    font-size:20px;
-    background:#FFD43B;
-    color:#333;
-    border:none;
-    border-radius:50px;
-    cursor:pointer;
-    font-weight:bold;
-    transition:.3s;
+
+padding:16px 40px;
+
+border:none;
+
+border-radius:40px;
+
+font-size:18px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+transition:.3s;
+
+background:#FFD43B;
+
 }
 
 .hero button:hover{
-    transform:scale(1.05);
+
+transform:translateY(-3px);
+
+}
+
+.sub-btn{
+
+background:white !important;
+
+color:#4f46e5;
+
 }
 
 /* ===== 共通 ===== */
@@ -210,6 +292,16 @@ footer{
     text-align:center;
     padding:30px;
 }
+.fade{
+    opacity:0;
+    transform:translateY(40px);
+    transition:all .8s ease;
+}
+
+.fade.show{
+    opacity:1;
+    transform:translateY(0);
+}
 </style>
 </head>
 
@@ -227,16 +319,46 @@ footer{
 </nav>
 
 </header>
-
+<section class="fade">
 <section class="hero">
 
-<h2>クイズで学ぼう。</h2>
+<div class="hero-left">
 
-<p>毎日挑戦して知識を増やし、ランキング上位を目指そう！</p>
+<div class="hero-tag">
+🎯 Quiz Master
+</div>
+
+<h2>
+知識を武器に、
+<br>
+挑戦を楽しもう。
+</h2>
+
+<p>
+毎日のクイズで実力アップ。
+ランキングや学習記録で成長を実感しよう。
+</p>
+
+<div class="hero-buttons">
 
 <button onclick="location.href='index.html'">
 クイズを始める
 </button>
+
+<button class="sub-btn"
+onclick="location.href='premium.html'">
+Premium
+</button>
+
+</div>
+
+</div>
+
+<div class="hero-right">
+
+<img src="images/top.png" alt="トップ画像">
+
+</div>
 
 </section>
 
@@ -322,6 +444,7 @@ Premiumになる
 
 </div>
 
+</section>
 </section>
 
 </div>
