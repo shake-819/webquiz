@@ -87,6 +87,17 @@
     });
 
 })();
+const items = document.querySelectorAll(".fade");
+
+const observer = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+        if(entry.isIntersecting){
+            entry.target.classList.add("show");
+        }
+    });
+});
+
+items.forEach(item=>observer.observe(item));
 
 // ログアウト
 document.getElementById("logout").addEventListener("click", async () => {
