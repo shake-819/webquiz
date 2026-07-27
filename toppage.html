@@ -72,10 +72,24 @@ width:48%;
 
 .hero-right{
 
-width:45%;
-display:flex;
-justify-content:center;
+    width:45%;
+    display:flex;
+    justify-content:center;
 
+    animation: sway 3s ease-in-out infinite;
+    transform-origin: center;
+}
+
+@keyframes sway{
+    0%{
+        transform: rotate(-3deg);
+    }
+    50%{
+        transform: rotate(3deg);
+    }
+    100%{
+        transform: rotate(-3deg);
+    }
 }
 
 .hero-right img{
