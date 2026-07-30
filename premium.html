@@ -1,461 +1,513 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Quiz Master | Premium</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:"Poppins",sans-serif;
+:root{
+    --paper:       #F5F3EC;
+    --paper-line:  #DAD4C4;
+    --margin-red:  #D99A94;
+    --ink:         #232A35;
+    --ink-soft:    #6B7280;
+    --red-pen:     #C6423A;
+    --red-pen-soft:#E2857D;
+    --navy:        #2E3E5C;
+    --gold:        #B8912E;
+    --gold-soft:   #E9CE87;
+    --sage:        #52745A;
+    --card-bg:     #FFFFFE;
+    --shadow:      rgba(35,42,53,.10);
 }
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
 
 body{
-    background:#f4f6fb;
-    color:#333;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    color:var(--ink);
+    background:
+        repeating-linear-gradient(
+            var(--paper) 0px, var(--paper) 35px,
+            var(--paper-line) 36px, var(--paper) 37px
+        );
+    background-attachment:local;
+    position:relative;
 }
 
+body::before{
+    content:"";
+    position:fixed;
+    top:0; bottom:0;
+    left:56px;
+    width:2px;
+    background:var(--margin-red);
+    opacity:.55;
+    z-index:0;
+    pointer-events:none;
+}
+@media (max-width:640px){ body::before{ left:26px; } }
 
-/* ヘッダー */
+img{ max-width:100%; display:block; }
+
+/* ===== ヘッダー（共通） ===== */
 
 header{
-    background:#4f46e5;
-    color:white;
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(245,243,236,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px dashed var(--paper-line);
+    padding:16px clamp(20px,6vw,56px) 16px clamp(64px,10vw,90px);
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:18px 40px;
-}
-
-header h1{
-    font-size:28px;
-}
-
-nav{
-    display:flex;
-    gap:20px;
-}
-
-nav button{
-    background:none;
-    border:none;
-    color:white;
-    cursor:pointer;
-    font-size:16px;
-    font-weight:bold;
-}
-
-
-/* Hero */
-
-.hero{
-
-    background:linear-gradient(135deg,#FFD43B,#ff9800);
-    text-align:center;
-    padding:70px 20px;
-
-}
-
-.hero h2{
-
-    font-size:45px;
-    margin-bottom:20px;
-
-}
-
-.hero p{
-
-    font-size:20px;
-
-}
-
-
-/* 共通 */
-
-.container{
-
-    width:90%;
-    max-width:1100px;
-    margin:auto;
-
-}
-
-
-section{
-
-    margin-top:60px;
-
-}
-
-
-.title{
-
-    font-size:30px;
-    margin-bottom:25px;
-
-}
-
-
-/* 機能 */
-
-.features{
-
-    display:flex;
+    gap:16px;
     flex-wrap:wrap;
-    justify-content:center;
-    gap:25px;
-
 }
 
-
-.card{
-
-    background:white;
-    width:250px;
-    padding:30px;
-    border-radius:20px;
-    text-align:center;
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
-
+.logo{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:"Zen Old Mincho", serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--ink);
+    text-decoration:none;
+}
+.logo .accent{ position:relative; display:inline-block; }
+.logo .accent svg{
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-52%);
+    width:120%; height:170%;
+    overflow:visible;
+}
+.logo .accent path{
+    fill:none; stroke:var(--gold); stroke-width:3.5; stroke-linecap:round;
 }
 
-
-.card h3{
-
-    color:#4f46e5;
-    margin-bottom:15px;
-
-}
-
-
-.card p{
-
-    line-height:1.7;
-
-}
-
-
-
-/* 比較 */
-
-.compare{
-
-    background:white;
-    border-radius:20px;
-    padding:30px;
-
-}
-
-
-table{
-
-    width:100%;
-    border-collapse:collapse;
-
-}
-
-
-th,td{
-
-    padding:15px;
-    text-align:center;
-    border-bottom:1px solid #ddd;
-
-}
-
-
-th{
-
-    background:#4f46e5;
-    color:white;
-
-}
-
-
-
-/* 登録 */
-
-.join{
-
-    background:#4f46e5;
-    color:white;
-    padding:50px;
-    text-align:center;
-    border-radius:25px;
-
-}
-
-
-.join button{
-
-    margin-top:25px;
-    padding:15px 45px;
-    border:none;
-    border-radius:30px;
-    background:#FFD43B;
-    font-size:18px;
-    font-weight:bold;
+nav{ display:flex; gap:8px; flex-wrap:wrap; }
+nav button{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    background:transparent;
+    border:1px solid transparent;
+    color:var(--ink);
     cursor:pointer;
+    font-size:14.5px;
+    font-weight:700;
+    padding:9px 16px;
+    border-radius:3px;
+    transition:.2s;
+}
+nav button:hover{ border-color:var(--paper-line); background:#fff; }
+nav button:focus-visible{ outline:2px solid var(--red-pen); outline-offset:2px; }
+nav button.tab-logout{ color:var(--ink-soft); }
+nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); background:#FBF6E7; }
 
+/* ===== 共通レイアウト ===== */
+
+main{ position:relative; z-index:1; }
+
+.wrap{
+    width:92%;
+    max-width:980px;
+    margin:0 auto;
+    padding-left:clamp(0px,4vw,24px);
 }
 
+.sheet-section{ margin-top:88px; }
 
-/* footer */
+.section-title{
+    font-family:"Zen Old Mincho", serif;
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:22px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+}
+.section-title .en{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    letter-spacing:.14em;
+}
+
+.reveal{
+    opacity:0;
+    transform:translateY(24px);
+    transition:opacity .7s ease, transform .7s ease;
+}
+.reveal.is-visible{ opacity:1; transform:translateY(0); }
+
+@media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+    *{ animation:none !important; }
+}
+
+/* ===== ヒーロー：表彰状 ===== */
+
+.cert-hero{ padding:56px clamp(20px,6vw,56px) 40px clamp(64px,10vw,90px); }
+
+.cert-hero__paper{
+    max-width:820px;
+    margin:0 auto;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 18px 40px var(--shadow);
+    padding:52px clamp(24px,6vw,64px) 48px;
+    text-align:center;
+    position:relative;
+}
+.cert-hero__paper::before,
+.cert-hero__paper::after{
+    content:"";
+    position:absolute;
+    left:22px; right:22px;
+    height:1px;
+    background:var(--gold-soft);
+}
+.cert-hero__paper::before{ top:14px; }
+.cert-hero__paper::after{ bottom:14px; }
+
+.seal{
+    width:76px; height:76px;
+    margin:0 auto 22px;
+    border-radius:50%;
+    border:2.5px solid var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:"Zen Old Mincho", serif;
+    font-weight:700;
+    font-size:13px;
+    color:var(--gold);
+    letter-spacing:.12em;
+    position:relative;
+    transform:rotate(-4deg);
+}
+.seal::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border:1px solid var(--gold);
+    border-radius:50%;
+}
+
+.cert-hero__paper .eyebrow{
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:.2em;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+}
+
+.cert-hero__paper h2{
+    font-family:"Zen Old Mincho", serif;
+    font-size:clamp(30px,5vw,46px);
+    font-weight:700;
+    margin-bottom:18px;
+}
+
+.cert-hero__paper p{
+    font-size:16px;
+    line-height:1.9;
+    color:var(--ink-soft);
+    max-width:32em;
+    margin:0 auto;
+}
+
+/* ===== 機能一覧 ===== */
+
+.feature-sheet{ padding:0 clamp(20px,6vw,56px) 0 clamp(64px,10vw,90px); }
+
+.feature-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(210px,1fr));
+    gap:18px;
+    max-width:900px;
+}
+
+.feature-card{
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    border-top:3px solid var(--gold);
+    padding:26px 24px;
+}
+.feature-card .icon{
+    width:34px; height:34px;
+    margin-bottom:16px;
+}
+.feature-card .icon path,
+.feature-card .icon circle,
+.feature-card .icon rect{
+    fill:none; stroke:var(--navy); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
+}
+.feature-card h3{
+    font-family:"Zen Old Mincho", serif;
+    font-size:17px;
+    margin-bottom:10px;
+}
+.feature-card p{
+    font-size:14px;
+    line-height:1.8;
+    color:var(--ink-soft);
+}
+
+/* ===== 比較（成績比較表） ===== */
+
+.compare-sheet{ padding:0 clamp(20px,6vw,56px) 0 clamp(64px,10vw,90px); }
+
+.compare-frame{
+    max-width:900px;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 12px 28px var(--shadow);
+    padding:8px clamp(12px,3vw,32px);
+    overflow-x:auto;
+}
+
+table{ width:100%; border-collapse:collapse; min-width:460px; }
+
+th, td{
+    padding:16px 14px;
+    text-align:center;
+    border-bottom:1px dashed var(--paper-line);
+    font-size:15px;
+}
+
+thead th{
+    font-family:"Zen Old Mincho", serif;
+    font-weight:700;
+    font-size:15px;
+    color:var(--ink);
+    border-bottom:2px solid var(--ink);
+}
+thead th:first-child{ text-align:left; }
+
+tbody td:first-child{
+    text-align:left;
+    color:var(--ink-soft);
+    font-weight:700;
+    font-size:14.5px;
+}
+
+tbody tr:last-child td{ border-bottom:none; }
+
+.mark{ display:inline-flex; }
+.mark path{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.mark.ok path{ stroke:var(--red-pen); stroke-width:3; }
+.mark.no path{ stroke:var(--ink-soft); stroke-width:2.2; opacity:.55; }
+
+td.is-premium{ background:#FBF6E7; }
+th.is-premium{ color:var(--gold); }
+
+/* ===== 入会（申込用紙） ===== */
+
+.join-sheet{ padding:0 clamp(20px,6vw,56px) 80px clamp(64px,10vw,90px); }
+
+.join-form{
+    max-width:900px;
+    background:var(--card-bg);
+    border:1.5px dashed var(--gold);
+    padding:44px clamp(24px,5vw,56px);
+    text-align:center;
+    position:relative;
+}
+.join-form::before{
+    content:"入会申込";
+    font-family:"Klee One", cursive;
+    position:absolute;
+    top:-15px; left:50%;
+    transform:translateX(-50%) rotate(-2deg);
+    background:var(--paper);
+    color:var(--gold);
+    font-size:14px;
+    padding:0 12px;
+}
+
+.join-form h2{
+    font-family:"Zen Old Mincho", serif;
+    font-size:26px;
+    margin-bottom:10px;
+}
+.join-form p{
+    color:var(--ink-soft);
+    margin-bottom:26px;
+    font-size:15px;
+}
+
+.btn-stamp{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-weight:900;
+    font-size:16px;
+    color:#fff;
+    background:var(--red-pen);
+    border:none;
+    padding:15px 34px;
+    cursor:pointer;
+    border-radius:2px;
+    letter-spacing:.03em;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn-stamp:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+.btn-stamp:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+
+/* ===== フッター ===== */
 
 footer{
-
-    margin-top:70px;
-    background:#222;
-    color:white;
-    text-align:center;
-    padding:30px;
-
+    padding:26px clamp(20px,6vw,56px) 30px clamp(64px,10vw,90px);
+    border-top:1px dashed var(--paper-line);
+    font-size:13px;
+    color:var(--ink-soft);
 }
-
-
 </style>
-
 </head>
-
 
 <body>
 
-
 <header>
-
-<h1>👑 Quiz Master</h1>
-
-
-<nav>
-
-<button onclick="location.href='index.html'">
-クイズ
-</button>
-
-<button onclick="location.href='mypage.html'">
-マイページ
-</button>
-
-<button onclick="location.href='premium.html'">
-Premium
-</button>
-
-<button id="logout">
-ログアウト
-</button>
-
-</nav>
-
-
+    <a class="logo" href="index.html">
+        <span>Quiz</span>
+        <span class="accent">Master
+            <svg viewBox="0 0 100 40"><path d="M6,20 C4,7 30,2 55,3 C82,4 96,10 94,21 C92,33 62,38 34,36 C10,34 3,28 8,19"/></svg>
+        </span>
+    </a>
+    <nav>
+        <button onclick="location.href='index.html'">クイズ</button>
+        <button onclick="location.href='mypage.html'">マイページ</button>
+        <button class="is-current" onclick="location.href='premium.html'">Premium</button>
+        <button id="logout" class="tab-logout">ログアウト</button>
+    </nav>
 </header>
 
+<main>
 
-
-<section class="hero">
-
-<h2>👑 Premium</h2>
-
-<p>
-もっと効率的に学習したい人へ
-</p>
-
+<section class="cert-hero reveal">
+    <div class="cert-hero__paper">
+        <div class="seal">認定</div>
+        <p class="eyebrow">MEMBERSHIP CERTIFICATE</p>
+        <h2>Premium</h2>
+        <p>毎日の学習を、もっと自分専用に。成績の見える化と手厚いサポートで、テスト対策をもう一段引き上げます。</p>
+    </div>
 </section>
 
+<div class="wrap">
 
+<section class="sheet-section feature-sheet reveal">
+    <h2 class="section-title">Premium限定機能<span class="en">FEATURES</span></h2>
+    <div class="feature-grid">
 
-<div class="container">
+        <div class="feature-card">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+            <h3>学習分析</h3>
+            <p>正答率や回答数をグラフ化。自分の成長を数字で確認できます。</p>
+        </div>
 
+        <div class="feature-card">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+            <h3>科目別分析</h3>
+            <p>得意・苦手な科目を分析して、効率よく弱点をつぶせます。</p>
+        </div>
 
-<section>
+        <div class="feature-card">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>
+            <h3>学習履歴</h3>
+            <p>いつ・何を解いたか、過去の学習記録をいつでも見返せます。</p>
+        </div>
 
+        <div class="feature-card">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>
+            <h3>AIサポート</h3>
+            <p>分からない問題をその場で質問。つまずきをすぐ解消できます。</p>
+        </div>
 
-<h2 class="title">
-✨ Premium限定機能
-</h2>
-
-
-<div class="features">
-
-
-<div class="card">
-
-<h3>📊 学習分析</h3>
-
-<p>
-正答率や回答数をグラフ化。
-自分の成長を確認できます。
-</p>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>📈 科目別分析</h3>
-
-<p>
-得意・苦手な科目を分析して
-効率よく勉強できます。
-</p>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>📅 学習履歴</h3>
-
-<p>
-過去の学習記録を確認できます。
-</p>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>🤖 AIサポート</h3>
-
-<p>
-分からない問題を質問できます。
-</p>
-
-</div>
-
-
-
-</div>
-
-
+    </div>
 </section>
 
-
-
-
-
-<section>
-
-
-<h2 class="title">
-🆚 Freeとの違い
-</h2>
-
-
-<div class="compare">
-
-
-<table>
-
-
-<tr>
-<th></th>
-<th>Free</th>
-<th>Premium</th>
-</tr>
-
-
-<tr>
-<td>クイズ</td>
-<td>⭕</td>
-<td>⭕</td>
-</tr>
-
-
-<tr>
-<td>ランキング</td>
-<td>⭕</td>
-<td>⭕</td>
-</tr>
-
-
-<tr>
-<td>成績グラフ</td>
-<td>❌</td>
-<td>⭕</td>
-</tr>
-
-
-<tr>
-<td>科目分析</td>
-<td>❌</td>
-<td>⭕</td>
-</tr>
-
-
-<tr>
-<td>学習履歴</td>
-<td>❌</td>
-<td>⭕</td>
-</tr>
-
-
-</table>
-
-
-</div>
-
-
+<section class="sheet-section compare-sheet reveal">
+    <h2 class="section-title">Freeとの違い<span class="en">COMPARE</span></h2>
+    <div class="compare-frame">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Free</th>
+                    <th class="is-premium">Premium</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>クイズ</td>
+                    <td><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                    <td class="is-premium"><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                </tr>
+                <tr>
+                    <td>ランキング</td>
+                    <td><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                    <td class="is-premium"><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                </tr>
+                <tr>
+                    <td>成績グラフ</td>
+                    <td><svg class="mark no" width="18" height="18" viewBox="0 0 18 18"><path d="M4 4l10 10M14 4L4 14"/></svg></td>
+                    <td class="is-premium"><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                </tr>
+                <tr>
+                    <td>科目分析</td>
+                    <td><svg class="mark no" width="18" height="18" viewBox="0 0 18 18"><path d="M4 4l10 10M14 4L4 14"/></svg></td>
+                    <td class="is-premium"><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                </tr>
+                <tr>
+                    <td>学習履歴</td>
+                    <td><svg class="mark no" width="18" height="18" viewBox="0 0 18 18"><path d="M4 4l10 10M14 4L4 14"/></svg></td>
+                    <td class="is-premium"><svg class="mark ok" width="20" height="20" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </section>
 
-
-
-
-
-<section>
-
-
-<div class="join">
-
-
-<h2>
-Premiumにアップグレード
-</h2>
-
-
-<p>
-あなたの学習をもっとスマートに。
-</p>
-
-
-<button>
-Premiumになる
-</button>
-
-
-</div>
-
-
+<section class="sheet-section join-sheet reveal">
+    <div class="join-form">
+        <h2>Premiumにアップグレード</h2>
+        <p>あなたの学習を、もっとスマートに。</p>
+        <button class="btn-stamp" onclick="location.href='index.html'">Premiumになる</button>
+    </div>
 </section>
 
-
 </div>
 
-
-
+</main>
 
 <footer>
-
-<p>
-© 2026 Quiz Master
-</p>
-
+    <p>© 2026 Quiz Master — 今日も一歩、合格へ。</p>
 </footer>
 
+<script>
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                io.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+    revealEls.forEach(el => io.observe(el));
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="supabase.js"></script>
 
 </body>
-
 </html>
