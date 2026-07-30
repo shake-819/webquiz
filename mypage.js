@@ -118,4 +118,140 @@ async function loadCategoryChart() {
         }
     );
 }
+async function loadDailyChart() {
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    // プラン確認
+    const { data: profile, error: profileError } = await supabaseClient
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+    if (profileError) {
+        console.error(profileError);
+        return;
+    }
+
+    // Premium以外は表示しない
+    if (profile.plan !== "premium") {
+        document.getElementById("dailyChart")?.remove();
+        return;
+    }
+
+    // 直近7日分の日付リストを作成（古い→新しい順）
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dates.push(d.toISOString().slice(0, 10));
+    }
+
+    // user_daily_stats取得（直近7日分、全カテゴリ）
+    const { data, error } = await supabaseClient
+        .from("user_daily_stats")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("date", dates[0]);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    // 日付ごとにカテゴリ横断で合算
+    const totals = {};
+    dates.forEach(d => {
+        totals[d] = { correct: 0, wrong: 0 };
+    });
+
+    data.forEach(row => {
+        if (totals[row.date]) {
+            totals[row.date].correct += row.correct;
+            totals[row.date].wrong += row.wrong;
+        }
+    });
+
+    // 総回答数・正答率を算出
+    const totalAnswers = dates.map(d =>
+        totals[d].correct + totals[d].wrong
+    );
+
+    const correctRates = dates.map(d => {
+        const t = totals[d].correct + totals[d].wrong;
+        return t === 0 ? 0 : Math.round((totals[d].correct / t) * 100);
+    });
+
+    // 日付ラベルを見やすく整形（例: 07/30）
+    const labels = dates.map(d => {
+        const [, m, day] = d.split("-");
+        return `${m}/${day}`;
+    });
+
+    new Chart(
+        document.getElementById("dailyChart"),
+        {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: "総回答数",
+                        data: totalAnswers,
+                        yAxisID: "yCount",
+                        borderColor: "rgb(59, 130, 246)",
+                        backgroundColor: "rgba(59, 130, 246, 0.15)",
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4
+                    },
+                    {
+                        label: "正答率 (%)",
+                        data: correctRates,
+                        yAxisID: "yRate",
+                        borderColor: "rgb(34, 197, 94)",
+                        backgroundColor: "rgba(34, 197, 94, 0.15)",
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
+                scales: {
+                    yCount: {
+                        type: "linear",
+                        position: "left",
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "総回答数"
+                        }
+                    },
+                    yRate: {
+                        type: "linear",
+                        position: "right",
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        title: {
+                            display: true,
+                            text: "正答率 (%)"
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
 loadCategoryChart();
+loadDailyChart();
