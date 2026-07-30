@@ -3,119 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>新規登録</title>
+<title>Quiz Master | 新規登録</title>
 
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:"Yu Gothic","Meiryo",sans-serif;
-}
-.title{
-    position:absolute;
-    top:20px;
-    width:100%;
-    text-align:center;
-    color:#0F52BA;
-    font-size:50px;
-    font-weight:bold;
-    text-shadow:2px 2px 10px rgba(0,0,0,.3);
-}
-body{
-    background-image:url("images/background.png");
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-.register-box{
-    width:350px;
-    background:white;
-    padding:40px;
-    border-radius:15px;
-    box-shadow:0 10px 30px rgba(0,0,0,.2);
-    text-align:center;
-}
-
-h2{
-    margin-bottom:30px;
-    color:#333;
-}
-
-input{
-    width:100%;
-    padding:12px;
-    margin-bottom:18px;
-    border:1px solid #ccc;
-    border-radius:8px;
-    font-size:16px;
-    outline:none;
-    transition:.2s;
-}
-
-input:focus{
-    border-color:#4facfe;
-    box-shadow:0 0 5px rgba(79,172,254,.5);
-}
-
-button{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:8px;
-    background:#4facfe;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-    transition:.2s;
-}
-
-button:hover{
-    background:#2d8df5;
-}
-
-p{
-    margin-top:20px;
-}
-
-a{
-    color:#4facfe;
-    text-decoration:none;
-}
-
-a:hover{
-    text-decoration:underline;
-}
-</style>
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
 </head>
 <body>
-<h1 class="title">Web版 くいず</h1>
 
-<div class="register-box">
+<div class="auth-wrap">
+    <div class="auth-card">
 
-<h2>新規登録</h2>
+        <a class="brand" href="index.html">
+            <span>Quiz</span>
+            <span class="brand-accent">Master
+                <svg viewBox="0 0 100 40"><path d="M6,20 C4,7 30,2 55,3 C82,4 96,10 94,21 C92,33 62,38 34,36 C10,34 3,28 8,19"/></svg>
+            </span>
+        </a>
 
-<input id="name" type="text" placeholder="ユーザー名">
+        <span class="auth-eyebrow">NEW NOTEBOOK</span>
+        <h2>新規登録</h2>
 
-<input id="email" type="email" placeholder="メールアドレス">
+        <div class="field">
+            <label for="name">ユーザー名</label>
+            <input id="name" type="text" placeholder="表示される名前">
+        </div>
 
-<input id="password" type="password" placeholder="パスワード">
+        <div class="field">
+            <label for="email">メールアドレス</label>
+            <input id="email" type="email" placeholder="you@example.com">
+        </div>
 
-<button id="register">
-登録
-</button>
+        <div class="field">
+            <label for="password">パスワード</label>
+            <input id="password" type="password" placeholder="••••••••">
+        </div>
 
-<p>
-<a href="login.html">ログインはこちら</a>
-</p>
+        <button id="register">登録</button>
 
+        <p class="switch">
+            アカウントをお持ちの方は <a href="login.html">ログインはこちら</a>
+        </p>
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
