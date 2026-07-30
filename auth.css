@@ -1,0 +1,177 @@
+:root{
+    --paper:       #F5F3EC;
+    --paper-line:  #DAD4C4;
+    --margin-red:  #D99A94;
+    --ink:         #232A35;
+    --ink-soft:    #6B7280;
+    --red-pen:     #C6423A;
+    --red-pen-soft:#E2857D;
+    --navy:        #2E3E5C;
+    --gold:        #B8912E;
+    --card-bg:     #FFFFFE;
+    --shadow:      rgba(35,42,53,.12);
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    background:
+        repeating-linear-gradient(
+            var(--paper) 0px, var(--paper) 35px,
+            var(--paper-line) 36px, var(--paper) 37px
+        );
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:32px 20px;
+    position:relative;
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    top:0; bottom:0;
+    left:56px;
+    width:2px;
+    background:var(--margin-red);
+    opacity:.55;
+    z-index:0;
+    pointer-events:none;
+}
+@media (max-width:640px){ body::before{ left:26px; } }
+
+/* ===== 表紙カード ===== */
+
+.auth-wrap{
+    width:100%;
+    max-width:380px;
+    position:relative;
+    z-index:1;
+}
+
+.auth-card{
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    border-top:4px solid var(--navy);
+    box-shadow:0 18px 40px var(--shadow);
+    padding:44px 34px 38px;
+    text-align:center;
+    position:relative;
+}
+
+/* ノートのパンチ穴風ワンポイント */
+.auth-card::before,
+.auth-card::after{
+    content:"";
+    position:absolute;
+    top:-7px;
+    width:12px; height:12px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+}
+.auth-card::before{ left:26px; }
+.auth-card::after{ right:26px; }
+
+.brand{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family:"Zen Old Mincho", serif;
+    font-size:20px;
+    font-weight:700;
+    color:var(--ink);
+    text-decoration:none;
+    margin-bottom:28px;
+}
+.brand-accent{ position:relative; display:inline-block; }
+.brand-accent svg{
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-52%);
+    width:120%; height:170%;
+    overflow:visible;
+}
+.brand-accent path{ fill:none; stroke:var(--red-pen); stroke-width:3.2; stroke-linecap:round; }
+
+.auth-eyebrow{
+    display:block;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.2em;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+}
+
+h2{
+    font-family:"Zen Old Mincho", serif;
+    font-size:25px;
+    font-weight:700;
+    margin-bottom:30px;
+    color:var(--ink);
+}
+
+.field{
+    text-align:left;
+    margin-bottom:20px;
+}
+
+.field label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    letter-spacing:.04em;
+}
+
+input{
+    width:100%;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:16px;
+    padding:10px 2px;
+    border:none;
+    border-bottom:2px solid var(--paper-line);
+    background:transparent;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .2s;
+}
+input::placeholder{ color:#B3B8C0; }
+input:focus{ border-bottom-color:var(--red-pen); }
+
+button{
+    width:100%;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-weight:900;
+    font-size:16px;
+    color:#fff;
+    background:var(--red-pen);
+    border:none;
+    padding:14px;
+    margin-top:8px;
+    cursor:pointer;
+    border-radius:2px;
+    letter-spacing:.03em;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease, background .2s;
+}
+button:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+button:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+
+p.switch{
+    margin-top:24px;
+    font-size:14px;
+    color:var(--ink-soft);
+}
+
+a{
+    color:var(--red-pen);
+    text-decoration:none;
+    border-bottom:1px solid var(--red-pen-soft);
+    padding-bottom:1px;
+}
+a:hover{ color:var(--ink); border-color:var(--ink); }
+a:focus-visible{ outline:2px solid var(--red-pen); outline-offset:3px; }
