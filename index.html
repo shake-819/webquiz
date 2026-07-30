@@ -1,72 +1,142 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Master | クイズ</title>
 
-    <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<div class="page">
+
     <div class="container">
 
-        <h1>Quiz</h1>
+        <a class="brand" href="index.html">
+            <span>Quiz</span>
+            <span class="brand-accent">Master
+                <svg viewBox="0 0 100 40"><path d="M6,20 C4,7 30,2 55,3 C82,4 96,10 94,21 C92,33 62,38 34,36 C10,34 3,28 8,19"/></svg>
+            </span>
+        </a>
 
-        <div id="category">カテゴリ</div>
-        <select id="categorySelect">
-            <option value="all">すべて</option>
-        </select>
+        <div class="category-row">
+            <span id="category">カテゴリ</span>
+            <select id="categorySelect">
+                <option value="all">すべて</option>
+            </select>
+        </div>
 
-        <div id="question">
-            問題を取得中...
+        <div class="question-sheet">
+            <span class="q-label">問題</span>
+            <div id="question">問題を取得中...</div>
         </div>
 
         <input
             id="answer"
             type="text"
-            placeholder="答えを入力">
+            placeholder="ここに答えを書く">
 
-        <button id="submit">
-            回答する
-        </button>
-        <button id="hint">ヒント</button>
+        <div class="btn-row">
+            <button id="submit" class="btn-stamp">回答する</button>
+            <button id="hint" class="btn-outline">ヒント</button>
+        </div>
 
         <div id="result"></div>
 
-        <button id="next">
-            次の問題
-        </button>
-        <button id="home">
-            ホームに戻る
-        </button>
-
-        <button id="logout">
-            ログアウト
-        </button>
-
-    </div>
-    <div class="chat">
-
-        <h3>💬 チャット</h3>
-
-        <div id="messages"></div>
-
-        <input
-            id="chatInput"
-            type="text"
-            placeholder="メッセージ">
-
-        <button id="sendChat">
-            送信
-        </button>
-
+        <div class="btn-row btn-row--sub">
+            <button id="next" class="btn-outline btn-navy">次の問題</button>
+            <button id="home" class="btn-outline">ホームに戻る</button>
+            <button id="logout" class="btn-text">ログアウト</button>
         </div>
 
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase.js"></script>
-    <script src="app.js"></script>
+
+    <div class="chat">
+        <div class="chat-head">
+            <span class="pin"></span>
+            <h3>クラストーク</h3>
+        </div>
+        <div id="messages"></div>
+        <div class="chat-input-row">
+            <input
+                id="chatInput"
+                type="text"
+                placeholder="メッセージを書く">
+            <button id="sendChat" class="btn-stamp btn-stamp--sm">送信</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- 採点マーク演出 -->
+<div id="markOverlay" class="mark-overlay" aria-hidden="true">
+    <svg id="markCorrect" class="mark-svg mark-svg--correct" viewBox="0 0 200 200">
+        <path d="M14,100 C10,45 55,12 105,14 C158,16 192,42 188,102 C184,162 130,190 78,186 C28,182 8,148 16,96"/>
+    </svg>
+    <svg id="markWrong" class="mark-svg mark-svg--wrong" viewBox="0 0 200 200">
+        <path d="M30,105 L82,155 L176,40"/>
+    </svg>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+
+<script>
+
+(function () {
+    const resultEl = document.getElementById('result');
+    const overlay = document.getElementById('markOverlay');
+    const markCorrect = document.getElementById('markCorrect');
+    const markWrong = document.getElementById('markWrong');
+    if (!resultEl || !overlay) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let lastJudged = '';
+    let hideTimer = null;
+
+    function judge(text) {
+        if (!text) return null;
+        if (text.includes('不正解') || text.includes('残念') || text.includes('×') || text.includes('✕')) return 'wrong';
+        if (text.includes('正解') || text.includes('⭕') || text.includes('○')) return 'correct';
+        return null;
+    }
+
+    function showMark(kind) {
+        clearTimeout(hideTimer);
+        overlay.classList.remove('is-correct', 'is-wrong', 'is-active');
+        markCorrect.classList.remove('draw');
+        markWrong.classList.remove('draw');
+
+        void overlay.offsetWidth; /* reflow でアニメーションをリセット */
+
+        overlay.classList.add('is-active', kind === 'correct' ? 'is-correct' : 'is-wrong');
+        if (!reduceMotion) {
+            (kind === 'correct' ? markCorrect : markWrong).classList.add('draw');
+        }
+
+        hideTimer = setTimeout(() => {
+            overlay.classList.remove('is-active');
+        }, reduceMotion ? 700 : 1300);
+    }
+
+    const observer = new MutationObserver(() => {
+        const text = resultEl.textContent.trim();
+        const kind = judge(text);
+        if (kind && text !== lastJudged) {
+            lastJudged = text;
+            showMark(kind);
+        }
+        if (!text) lastJudged = '';
+    });
+
+    observer.observe(resultEl, { childList: true, characterData: true, subtree: true });
+})();
+</script>
 
 </body>
 </html>
