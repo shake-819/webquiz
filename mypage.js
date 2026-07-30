@@ -10,14 +10,14 @@ async function loadCategoryChart() {
     }
 
     // プラン確認
-    const { data: profile, error } = await supabaseClient
+    const { data: profile, error: profileError } = await supabaseClient
         .from("users")
         .select("plan")
         .eq("id", user.id)
         .single();
 
-    if (error) {
-        console.error(error);
+    if (profileError) {
+        console.error(profileError);
         return;
     }
 
@@ -39,19 +39,7 @@ async function loadCategoryChart() {
         return;
     }
 
-    // プラン確認
-    const { data: profile } = await supabaseClient
-        .from("users")
-        .select("plan")
-        .eq("id", user.id)
-        .single();
-
-    if (profile.plan === "free") {
-        document.body.innerHTML +=
-            "<p>Premium限定機能です。</p>";
-        return;
-    }
-
+    // 教科別データ取得
     const { data, error } = await supabaseClient
         .from("user_category_stats")
         .select("*")
@@ -69,10 +57,9 @@ async function loadCategoryChart() {
 
         const total = row.correct + row.wrong;
 
-        const rate =
-            total === 0
+        const rate = total === 0
             ? 0
-            : Math.round(row.correct / total * 100);
+            : Math.round((row.correct / total) * 100);
 
         labels.push(row.category);
         rates.push(rate);
@@ -83,32 +70,23 @@ async function loadCategoryChart() {
         document.getElementById("categoryChart"),
         {
             type: "bar",
-
             data: {
-                labels: labels,
-
+                labels,
                 datasets: [{
-                    label: "正答率(%)",
+                    label: "正答率 (%)",
                     data: rates,
                     borderWidth: 1
                 }]
             },
-
             options: {
-
                 responsive: true,
-
                 scales: {
-
                     y: {
                         beginAtZero: true,
                         max: 100
                     }
-
                 }
-
             }
-
         }
     );
 
