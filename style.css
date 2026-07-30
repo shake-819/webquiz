@@ -1,181 +1,392 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Yu Gothic", "Meiryo", sans-serif;
+:root{
+    --paper:       #F5F3EC;
+    --paper-line:  #DAD4C4;
+    --margin-red:  #D99A94;
+    --ink:         #232A35;
+    --ink-soft:    #6B7280;
+    --red-pen:     #C6423A;
+    --red-pen-soft:#E2857D;
+    --navy:        #2E3E5C;
+    --gold:        #B8912E;
+    --sage:        #52745A;
+    --card-bg:     #FFFFFE;
+    --shadow:      rgba(35,42,53,.10);
 }
 
-body {
-    background: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    gap: 20px;
-    min-height: 100vh;
-    padding: 20px;
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    color:var(--ink);
+    background:
+        repeating-linear-gradient(
+            var(--paper) 0px, var(--paper) 35px,
+            var(--paper-line) 36px, var(--paper) 37px
+        );
+    min-height:100vh;
 }
 
-.container {
-    width: 100%;
-    max-width: 600px;
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 5px 20px rgba(0,0,0,.15);
+img{ max-width:100%; display:block; }
 
-    display: flex;
-    flex-direction: column;
+/* ===== ページ全体レイアウト ===== */
+
+.page{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:22px;
+    flex-wrap:wrap;
+    min-height:100vh;
+    padding:32px 20px;
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 25px;
+/* ===== クイズシート ===== */
+
+.container{
+    width:100%;
+    max-width:600px;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 14px 34px var(--shadow);
+    padding:32px clamp(20px,4vw,40px) 36px;
+    display:flex;
+    flex-direction:column;
 }
 
-#category {
-    font-weight: bold;
-    color: #2196f3;
-    margin-bottom: 15px;
+.brand{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-family:"Zen Old Mincho", serif;
+    font-size:18px;
+    font-weight:700;
+    color:var(--ink);
+    text-decoration:none;
+    align-self:center;
+    margin-bottom:22px;
+}
+.brand-accent{ position:relative; display:inline-block; }
+.brand-accent svg{
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-52%);
+    width:120%; height:170%;
+    overflow:visible;
+}
+.brand-accent path{ fill:none; stroke:var(--red-pen); stroke-width:3.2; stroke-linecap:round; }
+
+.category-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;
 }
 
-#question {
-    font-size: 1.2rem;
-    line-height: 1.8;
-    margin-bottom: 25px;
-    min-height: 80px;
+#category{
+    font-family:"Klee One", cursive;
+    font-weight:600;
+    font-size:14px;
+    color:var(--red-pen);
+    border:1px solid var(--red-pen);
+    border-radius:4px;
+    padding:4px 12px;
+    transform:rotate(-2deg);
+    display:inline-block;
+    flex-shrink:0;
 }
 
-#answer {
-    width: 100%;
-    padding: 12px;
-    font-size: 18px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    margin-bottom: 15px;
+#categorySelect{
+    flex:1;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    padding:9px 12px;
+}
+#categorySelect:focus-visible{ outline:2px solid var(--red-pen); outline-offset:2px; }
+
+.question-sheet{
+    background:
+        repeating-linear-gradient(
+            var(--card-bg) 0px, var(--card-bg) 33px,
+            var(--paper-line) 34px, var(--card-bg) 35px
+        );
+    border:1px solid var(--paper-line);
+    border-left:3px solid var(--navy);
+    padding:22px 22px 26px;
+    margin-bottom:22px;
+    position:relative;
 }
 
-button {
-    width: 100%;
-    padding: 12px;
-    font-size: 18px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-bottom: 12px;
+.q-label{
+    font-family:"Zen Old Mincho", serif;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    letter-spacing:.14em;
+    display:block;
+    margin-bottom:10px;
 }
 
-#submit {
-    background: #2196f3;
-    color: white;
+#question{
+    font-family:"Zen Old Mincho", serif;
+    font-size:19px;
+    line-height:1.9;
+    min-height:70px;
+    color:var(--ink);
 }
 
-#submit:hover {
-    background: #1976d2;
+#answer{
+    width:100%;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:17px;
+    padding:12px 4px;
+    border:none;
+    border-bottom:2px solid var(--ink);
+    background:transparent;
+    margin-bottom:20px;
+    color:var(--ink);
+}
+#answer::placeholder{ color:#A9AFB8; }
+#answer:focus{ outline:none; border-bottom-color:var(--red-pen); }
+
+.btn-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:6px;
+}
+.btn-row--sub{
+    margin-top:6px;
+    flex-wrap:wrap;
 }
 
-#next {
-    background: #4caf50;
-    color: white;
+button{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    cursor:pointer;
+    border-radius:2px;
+    transition:transform .15s ease, box-shadow .15s ease, background .2s, color .2s, border-color .2s;
+}
+button:focus-visible{ outline:2px solid var(--red-pen); outline-offset:2px; }
+
+.btn-stamp{
+    flex:1;
+    font-weight:900;
+    font-size:16px;
+    color:#fff;
+    background:var(--red-pen);
+    border:none;
+    padding:14px 20px;
+    box-shadow:3px 3px 0 var(--ink);
+}
+.btn-stamp:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+
+.btn-stamp--sm{
+    flex:0 0 auto;
+    padding:11px 18px;
+    font-size:14px;
+    box-shadow:2px 2px 0 var(--ink);
+}
+.btn-stamp--sm:hover{ box-shadow:3px 3px 0 var(--ink); }
+
+.btn-outline{
+    flex:1;
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--paper-line);
+    padding:12px 16px;
+}
+.btn-outline:hover{ border-color:var(--ink); background:var(--paper); }
+
+.btn-outline.btn-navy{ color:var(--navy); border-color:var(--navy); }
+.btn-outline.btn-navy:hover{ background:#EEF1F6; }
+
+.btn-text{
+    flex:0 0 auto;
+    font-weight:700;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    background:transparent;
+    border:none;
+    padding:12px 10px;
+    text-decoration:underline;
+    text-underline-offset:3px;
+}
+.btn-text:hover{ color:var(--red-pen); }
+
+#result{
+    text-align:center;
+    font-family:"Zen Old Mincho", serif;
+    font-size:21px;
+    font-weight:700;
+    min-height:36px;
+    margin:14px 0 6px;
+    color:var(--ink);
 }
 
-#next:hover {
-    background: #388e3c;
+/* ===== チャット（回し書きノート） ===== */
+
+.chat{
+    width:320px;
+    max-width:100%;
+    height:700px;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 14px 34px var(--shadow);
+    padding:18px 16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    position:relative;
 }
 
-#result {
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    min-height: 40px;
-    margin: 15px 0;
+.chat-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
-.chat {
-    width: 320px;
-    height: 700px;   /* containerと同じ高さ */
-
-    background: #fff;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    padding: 15px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.chat-head .pin{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--red-pen);
+    box-shadow:0 1px 2px var(--shadow);
+    flex-shrink:0;
+}
+.chat-head h3{
+    font-family:"Zen Old Mincho", serif;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
 }
 
-/* メッセージ欄 */
-#messages {
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px;
-    background: #f8f8f8;
-
-    display: flex;
-    flex-direction: column;
+#messages{
+    flex:1;
+    overflow-y:auto;
+    border:1px solid var(--paper-line);
+    padding:12px;
+    background:
+        repeating-linear-gradient(
+            var(--paper) 0px, var(--paper) 27px,
+            var(--paper-line) 28px, var(--paper) 29px
+        );
+    display:flex;
+    flex-direction:column;
 }
 
-/* メッセージ */
-.message {
-    margin-bottom: 8px;
-    width: fit-content;
-    max-width: 80%;
-}
-/* 入力欄 */
-#chatInput {
-    width: 100%;
-    box-sizing: border-box;
+.message{ margin-bottom:10px; width:fit-content; max-width:82%; }
+
+.mine{ align-self:flex-end; text-align:right; width:fit-content; max-width:82%; }
+.other{ align-self:flex-start; width:fit-content; max-width:82%; }
+
+.bubble{
+    display:inline-block;
+    padding:9px 13px;
+    border-radius:3px;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    width:fit-content;
+    max-width:100%;
+    word-break:break-word;
+    white-space:normal;
+    overflow-wrap:break-word;
+    font-family:"Klee One", cursive;
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--ink);
 }
 
-/* ボタン */
-#sendChat {
-    width: 100%;
-}
-.mine {
-    align-self: flex-end;
-    text-align: right;
-    width: fit-content;
-    max-width: 80%;
-}
-
-.other {
-    align-self: flex-start;
-    width: fit-content;
-    max-width: 80%;
-}
-
-.bubble {
-    display: inline-block;
-    padding: 10px 14px;
-    border-radius: 15px;
-    background: #eee;
-
-    width: fit-content;
-    max-width: 100%;
-    word-break: break-word;
-    white-space: normal;
-    overflow-wrap: break-word;
-}
 .mine .bubble{
-    background:#4caf50;
-    color:white;
+    background:#FDF1EF;
+    border-color:var(--red-pen-soft);
+    color:var(--ink);
 }
-
 .other .bubble{
-    background:#ddd;
+    background:var(--card-bg);
+    border-color:var(--paper-line);
 }
 
 .name{
-    font-size:12px;
-    color:#666;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:11.5px;
+    color:var(--ink-soft);
     margin-bottom:3px;
 }
-#home{
-    background:#ff9800;
-    color:white;
+
+.chat-input-row{
+    display:flex;
+    gap:8px;
 }
 
-#home:hover{
-    background:#f57c00;
+#chatInput{
+    flex:1;
+    min-width:0;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:14.5px;
+    padding:10px 4px;
+    border:none;
+    border-bottom:2px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+}
+#chatInput::placeholder{ color:#A9AFB8; }
+#chatInput:focus{ outline:none; border-bottom-color:var(--red-pen); }
+
+/* ===== 採点マーク演出 ===== */
+
+.mark-overlay{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(35,42,53,0);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, background .25s ease;
+    z-index:999;
+}
+.mark-overlay.is-active{
+    opacity:1;
+    background:rgba(35,42,53,.14);
+}
+
+.mark-svg{
+    width:min(62vw,340px);
+    height:min(62vw,340px);
+    display:none;
+}
+.mark-svg path{
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.mark-overlay.is-correct .mark-svg--correct{ display:block; }
+.mark-overlay.is-wrong .mark-svg--wrong{ display:block; }
+
+.mark-svg--correct path{ stroke:var(--red-pen); stroke-width:11; }
+.mark-svg--wrong path{ stroke:var(--red-pen); stroke-width:15; }
+
+.mark-svg--correct path{ stroke-dasharray:620; stroke-dashoffset:620; }
+.mark-svg--wrong path{ stroke-dasharray:260; stroke-dashoffset:260; }
+
+.mark-svg.draw path{
+    transition:stroke-dashoffset .55s ease;
+    stroke-dashoffset:0;
+}
+
+/* reduced motion: 線を描かず、静止した状態でフェードのみ */
+@media (prefers-reduced-motion: reduce){
+    .mark-svg--correct path,
+    .mark-svg--wrong path{ stroke-dashoffset:0; }
+    .mark-overlay{ transition:opacity .2s ease; }
+}
+
+/* ===== レスポンシブ ===== */
+
+@media (max-width:760px){
+    .page{ flex-direction:column; align-items:center; }
+    .chat{ height:420px; width:100%; max-width:600px; }
 }
