@@ -551,7 +551,60 @@ async function sendChat() {
         });
     input.value = "";
     loadChat();
+    // @AIメンションでAIが応答
+    if (message.includes("@AI")) {
+        const question = message.replace(/@AI/gi, "").trim();
+        askAI(question || "こんにちは");
+    }
 
+}
+// ==========================
+// AIチャット機能
+// ==========================
+const GROQ_API_KEY = "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"; // ⚠️下の注意参照
+const AI_BOT_USER_ID = "d23c8281-7c28-4440-a335-a8c0d20c9442";
+const AI_BOT_NAME = "ちゃっとAI";
+
+async function askAI(promptText) {
+    try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                    { role: "system", content: "あなたはクイズアプリのクラスチャットにいる親切なAIアシスタントです。日本語で簡潔に答えてください。わからないことは必ず分からないと言ってください。" },
+                    { role: "user", content: promptText }
+                ]
+            })
+        });
+
+        const data = await response.json();
+        const aiText =
+            data.choices?.[0]?.message?.content?.trim() ||
+            "うまく答えられませんでした…";
+
+        await supabaseClient
+            .from("chat_messages")
+            .insert({
+                user_id: AI_BOT_USER_ID,
+                user_name: AI_BOT_NAME,
+                message: aiText
+            });
+
+    } catch (err) {
+        console.error(err);
+        await supabaseClient
+            .from("chat_messages")
+            .insert({
+                user_id: AI_BOT_USER_ID,
+                user_name: AI_BOT_NAME,
+                message: "エラーが発生しました。もう一度試してください。"
+            });
+    }
 }
 const chatInput = document.getElementById("chatInput");
 
