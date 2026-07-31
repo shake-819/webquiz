@@ -253,5 +253,103 @@ async function loadDailyChart() {
         }
     );
 }
+async function loadBookmarks() {
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+    if (!user) {
+        location.href = "login.html";
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("user_bookmarks")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const container = document.getElementById("bookmarkContainer");
+    const emptyMsg = document.getElementById("bookmarkEmpty");
+
+    // 既存のカテゴリグループを一旦クリア（emptyMsgは残す）
+    container.querySelectorAll(".category-group").forEach(el => el.remove());
+
+    if (!data || data.length === 0) {
+        emptyMsg.style.display = "block";
+        return;
+    }
+    emptyMsg.style.display = "none";
+
+    // カテゴリごとにグルーピング
+    const grouped = {};
+    data.forEach(row => {
+        const cat = row.category || "その他";
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(row);
+    });
+
+    Object.keys(grouped).forEach(category => {
+        const items = grouped[category];
+
+        const group = document.createElement("div");
+        group.className = "category-group";
+
+        group.innerHTML = `
+            <div class="category-header">
+                <span>${category}</span>
+                <span class="count-badge">${items.length}</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="category-body"></div>
+        `;
+
+        const body = group.querySelector(".category-body");
+
+        items.forEach(item => {
+            const el = document.createElement("div");
+            el.className = "bookmark-item";
+            el.innerHTML = `
+                <span class="star-icon">★</span>
+                <span class="q-text">${item.question}</span>
+                <button class="remove-btn" data-id="${item.id}">解除</button>
+            `;
+            body.appendChild(el);
+        });
+
+        group.querySelector(".category-header")
+            .addEventListener("click", () => {
+                group.classList.toggle("open");
+            });
+
+        container.appendChild(group);
+    });
+
+    // 解除ボタンのイベント
+    container.querySelectorAll(".remove-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+
+            const { error } = await supabaseClient
+                .from("user_bookmarks")
+                .delete()
+                .eq("id", id);
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            loadBookmarks(); // 再読み込みして表示更新
+        });
+    });
+}
+
+loadBookmarks();
 loadCategoryChart();
 loadDailyChart();
