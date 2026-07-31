@@ -67,7 +67,26 @@ body {
     padding: 10px;
     margin-bottom: 10px;
 }
-
+.home-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    background: #fffdf7;
+    border: 1px solid #d9c9a0;
+    border-radius: 20px;
+    font-family: 'Zen Kurenaido', sans-serif;
+    font-size: 14px;
+    color: #5b4636;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.15s ease, background 0.15s ease;
+    z-index: 10;
+}
+.home-btn:hover {
+    background: #f5efe0;
+    transform: translateY(-1px);
+}
 /* ===== ブックマークまわり ===== */
 .bookmark-container {
     margin-top: 12px;
