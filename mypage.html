@@ -3,30 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <title>マイページ</title>
-
 <!-- Supabase本体 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<!-- Google Fonts（手書き風） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="mypage.css">
 <!-- 自分のJS -->
 <script src="supabase.js"></script>
 <script src="mypage.js" defer></script>
-
 </head>
-
 <body>
 
-<h2>教科別正答率</h2>
+<div class="notebook">
 
-<div style="width:700px;">
-    <canvas id="categoryChart"></canvas>
-</div>
-<h2>日別折れ線グラフ</h2>
+    <div class="notebook-spiral">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
 
-<div style="width:700px;">
-    <canvas id="dailyChart"></canvas>
+    <div class="notebook-page">
+
+        <h2 class="page-title">📊 教科別正答率</h2>
+        <div class="chart-box">
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+        <h2 class="page-title">📈 日別記録</h2>
+        <div class="chart-box">
+            <canvas id="dailyChart"></canvas>
+        </div>
+
+        <h2 class="page-title">⭐ ブックマーク一覧</h2>
+        <div id="bookmarkContainer" class="bookmark-container">
+            <p class="empty-message" id="bookmarkEmpty" style="display:none;">
+                まだブックマークがありません。
+            </p>
+        </div>
+
+    </div>
+
 </div>
 
 </body>
