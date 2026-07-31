@@ -115,6 +115,7 @@ function nextQuiz() {
 
     category.textContent = `【${currentQuestion.category}】`;
     question.textContent = currentQuestion.question;
+    renderBookmarkStar(); // ← 追加
 
 }
 function showHint() {
@@ -353,7 +354,113 @@ async function submitAnswer() {
     }
 
 }
+// ==========================
+// ブックマーク機能
+// ==========================
+let bookmarkedIds = new Set();
+let bookmarkStarEl = null;
 
+function ensureBookmarkStarElement() {
+    if (bookmarkStarEl) return bookmarkStarEl;
+
+    bookmarkStarEl = document.createElement("span");
+    bookmarkStarEl.id = "bookmarkStar";
+    bookmarkStarEl.style.cssText = `
+        cursor: pointer;
+        font-size: 18px;
+        margin-left: 8px;
+        user-select: none;
+        vertical-align: middle;
+        transition: transform 0.15s ease;
+    `;
+    bookmarkStarEl.addEventListener("click", toggleBookmark);
+    bookmarkStarEl.addEventListener("mousedown", () => {
+        bookmarkStarEl.style.transform = "scale(1.3)";
+    });
+    bookmarkStarEl.addEventListener("mouseup", () => {
+        bookmarkStarEl.style.transform = "scale(1)";
+    });
+
+    // カテゴリ表示の直後に挿入
+    category.insertAdjacentElement("afterend", bookmarkStarEl);
+    return bookmarkStarEl;
+}
+
+// 起動時に自分のブックマーク一覧をまとめて取得
+async function loadBookmarks() {
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabaseClient
+        .from("user_bookmarks")
+        .select("question_id")
+        .eq("user_id", user.id);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    bookmarkedIds = new Set(data.map(row => String(row.question_id)));
+}
+
+// 現在の問題に応じて星の見た目を更新
+function renderBookmarkStar() {
+    if (!currentQuestion) return;
+
+    const starEl = ensureBookmarkStarElement();
+    const isBookmarked = bookmarkedIds.has(String(currentQuestion.id));
+
+    starEl.textContent = isBookmarked ? "★" : "☆";
+    starEl.style.color = isBookmarked ? "#facc15" : "#999";
+    starEl.title = isBookmarked ? "ブックマーク解除" : "ブックマークする";
+}
+
+// クリック時のトグル処理
+async function toggleBookmark() {
+    if (!currentQuestion) return;
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const qid = String(currentQuestion.id);
+    const isBookmarked = bookmarkedIds.has(qid);
+
+    if (isBookmarked) {
+        const { error } = await supabaseClient
+            .from("user_bookmarks")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("question_id", qid);
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+        bookmarkedIds.delete(qid);
+    } else {
+        const { error } = await supabaseClient
+            .from("user_bookmarks")
+            .insert({
+                user_id: user.id,
+                question_id: qid,
+                category: currentQuestion.category,
+                question: currentQuestion.question
+            });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+        bookmarkedIds.add(qid);
+    }
+
+    renderBookmarkStar();
+}
 async function loadChat() {
     const {
         data: { user }
@@ -462,6 +569,7 @@ categorySelect?.addEventListener("change", () => {
 });
 
 loadQuestions();
+loadBookmarks(); // ← 追加。問題読み込みと並行でOK
 loadChat();
 document
 .getElementById("home")
