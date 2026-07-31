@@ -427,6 +427,23 @@ async function toggleBookmark() {
     } = await supabaseClient.auth.getUser();
     if (!user) return;
 
+    // プラン確認（Premium限定）
+    const { data: profile, error: profileError } = await supabaseClient
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+
+    if (profileError) {
+        console.error(profileError);
+        return;
+    }
+
+    if (profile.plan !== "premium") {
+        alert("ブックマークはPremiumプラン限定機能です");
+        return;
+    }
+
     const qid = String(currentQuestion.id);
     const isBookmarked = bookmarkedIds.has(qid);
 
@@ -449,7 +466,8 @@ async function toggleBookmark() {
                 user_id: user.id,
                 question_id: qid,
                 category: currentQuestion.category,
-                question: currentQuestion.question
+                question: currentQuestion.question,
+                answer: String(currentQuestion.answer) // ← 追加
             });
 
         if (error) {
