@@ -203,7 +203,7 @@ async function loadDailyChart() {
                         yAxisID: "yCount",
                         borderColor: "rgb(59, 130, 246)",
                         backgroundColor: "rgba(59, 130, 246, 0.15)",
-                        tension: 0.3,
+                        tension: 0,
                         fill: true,
                         pointRadius: 4
                     },
@@ -213,7 +213,7 @@ async function loadDailyChart() {
                         yAxisID: "yRate",
                         borderColor: "rgb(34, 197, 94)",
                         backgroundColor: "rgba(34, 197, 94, 0.15)",
-                        tension: 0.3,
+                        tension: 0,
                         fill: true,
                         pointRadius: 4
                     }
