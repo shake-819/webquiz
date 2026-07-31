@@ -349,7 +349,10 @@ async function loadBookmarks() {
         });
     });
 }
-
+document.getElementById("homeBtn")
+    .addEventListener("click", () => {
+        location.href = "toppage.html";
+    });
 loadBookmarks();
 loadCategoryChart();
 loadDailyChart();
