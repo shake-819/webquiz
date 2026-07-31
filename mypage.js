@@ -315,9 +315,20 @@ async function loadBookmarks() {
             el.className = "bookmark-item";
             el.innerHTML = `
                 <span class="star-icon">★</span>
-                <span class="q-text">${item.question}</span>
+                <div class="q-wrap">
+                    <div class="q-text clickable">${item.question}</div>
+                    <div class="a-text" style="display:none;">💡 ${item.answer ?? "（答え未登録）"}</div>
+                </div>
                 <button class="remove-btn" data-id="${item.id}">解除</button>
             `;
+
+    // 問題文クリックで答えの表示/非表示をトグル
+            el.querySelector(".q-text").addEventListener("click", () => {
+                const aText = el.querySelector(".a-text");
+                aText.style.display =
+                    aText.style.display === "none" ? "block" : "none";
+            });
+
             body.appendChild(el);
         });
 
