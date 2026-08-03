@@ -5,12 +5,12 @@ registerBtn?.addEventListener("click", register);
 loginBtn?.addEventListener("click", login);
 
 async function register() {
-
     const name = document.getElementById("name").value.trim();
+    const grade = document.getElementById("grade").value;
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    if (!name || !email || !password) {
+    if (!name || !grade || !email || !password) {
         alert("すべて入力してください");
         return;
     }
@@ -34,6 +34,7 @@ async function register() {
             .insert({
                 id: user.id,
                 name: name,
+                grade: grade,
                 score: 0,
                 correct: 0,
                 wrong: 0,
@@ -47,7 +48,6 @@ async function register() {
     }
 
     alert("登録しました");
-
     location.href = "login.html";
 }
 async function login() {
