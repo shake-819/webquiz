@@ -1,4 +1,3 @@
-const API_URL = "https://sheet2api.com/v1/29AXFCHHTfS7/discord";
 const API_URLS = {
     "中3": "https://sheet2api.com/v1/29AXFCHHTfS7/3",
     "高3": "https://sheet2api.com/v1/29AXFCHHTfS7/discord"
