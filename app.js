@@ -1,4 +1,10 @@
 const API_URL = "https://sheet2api.com/v1/29AXFCHHTfS7/discord";
+const API_URLS = {
+    "中3": "https://sheet2api.com/v1/29AXFCHHTfS7/3",
+    "高3": "https://sheet2api.com/v1/29AXFCHHTfS7/discord"
+};
+
+let API_URL = null; 
 
 const category = document.getElementById("category");
 const question = document.getElementById("question");
@@ -19,17 +25,38 @@ let categoryMap = {};
 checkLogin();
 
 async function checkLogin() {
-
     const {
         data: { session }
     } = await supabaseClient.auth.getSession();
 
     if (!session) {
-
         location.href = "login.html";
-
+        return;
     }
 
+    await setApiUrlByGrade(session.user.id);
+
+    // 学年が確定してから初めて問題を読み込む
+    loadQuestions();
+    loadBookmarks();
+    loadChat();
+}
+
+async function setApiUrlByGrade(userId) {
+    const { data: profile, error } =
+        await supabaseClient
+            .from("users")
+            .select("grade")
+            .eq("id", userId)
+            .single();
+
+    if (error || !profile || !profile.grade) {
+        console.error("学年情報の取得に失敗しました", error);
+        API_URL = API_URLS["中3"]; // フォールバック(必要に応じて変更)
+        return;
+    }
+
+    API_URL = API_URLS[profile.grade] || API_URLS["中3"];
 }
 async function loadQuestions() {
 
@@ -639,9 +666,6 @@ categorySelect?.addEventListener("change", () => {
     nextQuiz();
 });
 
-loadQuestions();
-loadBookmarks(); // ← 追加。問題読み込みと並行でOK
-loadChat();
 document
 .getElementById("home")
 .addEventListener("click", () => {
