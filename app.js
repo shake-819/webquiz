@@ -3,7 +3,8 @@ const API_URLS = {
     "高3": "https://sheet2api.com/v1/29AXFCHHTfS7/discord"
 };
 
-let API_URL = null; 
+let API_URL = null;
+let myGrade = "中3"; // ログインユーザーの学年(チャットの絞り込みに使用)
 
 const category = document.getElementById("category");
 const question = document.getElementById("question");
@@ -52,10 +53,13 @@ async function setApiUrlByGrade(userId) {
     if (error || !profile || !profile.grade) {
         console.error("学年情報の取得に失敗しました", error);
         API_URL = API_URLS["中3"]; // フォールバック(必要に応じて変更)
+        myGrade = "中3";
         return;
     }
 
-    API_URL = API_URLS[profile.grade] || API_URLS["中3"];
+    const grade = String(profile.grade).trim();
+    API_URL = API_URLS[grade] || API_URLS["中3"];
+    myGrade = API_URLS[grade] ? grade : "中3";
 }
 async function loadQuestions() {
 
@@ -513,6 +517,7 @@ async function loadChat() {
     const { data } = await supabaseClient
         .from("chat_messages")
         .select("*")
+        .eq("grade", myGrade)
         .order("created_at", { ascending: true })
         .limit(30);
         
@@ -573,14 +578,15 @@ async function sendChat() {
         .insert({
             user_id: user.id,
             user_name: profile.name,
-            message: message
+            message: message,
+            grade: myGrade
         });
     input.value = "";
     loadChat();
-    // @AIメンションでAIが応答
+    // @AIメンションでAIが応答(AIはどの学年のチャットにも参加可能)
     if (message.includes("@AI")) {
         const question = message.replace(/@AI/gi, "").trim();
-        askAI(question || "こんにちは");
+        askAI(question || "こんにちは", myGrade);
     }
 
 }
@@ -591,7 +597,7 @@ const GROQ_API_KEY = "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";
 const AI_BOT_USER_ID = "d23c8281-7c28-4440-a335-a8c0d20c9442";
 const AI_BOT_NAME = "ちゃっとAI";
 
-async function askAI(promptText) {
+async function askAI(promptText, grade) {
     try {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -618,7 +624,8 @@ async function askAI(promptText) {
             .insert({
                 user_id: AI_BOT_USER_ID,
                 user_name: AI_BOT_NAME,
-                message: aiText
+                message: aiText,
+                grade: grade
             });
 
     } catch (err) {
@@ -628,7 +635,8 @@ async function askAI(promptText) {
             .insert({
                 user_id: AI_BOT_USER_ID,
                 user_name: AI_BOT_NAME,
-                message: "エラーが発生しました。もう一度試してください。"
+                message: "エラーが発生しました。もう一度試してください。",
+                grade: grade
             });
     }
 }
@@ -693,7 +701,10 @@ supabaseClient
 
     payload => {
 
-        loadChat();
+        // 自分の学年のチャットへの投稿のときだけ再読み込み
+        if (payload.new?.grade === myGrade) {
+            loadChat();
+        }
 
     }
 
