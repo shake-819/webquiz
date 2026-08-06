@@ -333,28 +333,42 @@ button:focus-visible{ outline:2px solid var(--red-pen); outline-offset:2px; }
 #chatInput::placeholder{ color:#A9AFB8; }
 #chatInput:focus{ outline:none; border-bottom-color:var(--red-pen); }
 
-/* ===== 採点マーク演出 ===== */
+/* ===== 採点マーク演出（解答欄の右横に表示） ===== */
+
+.answer-row{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
 
 .mark-overlay{
-    position:fixed;
-    inset:0;
+    position:absolute;
+    left:8px;
+    top:50%;
+    transform:translateY(-50%);
+    width:44px;
+    height:44px;
     display:flex;
     align-items:center;
     justify-content:center;
-    background:rgba(35,42,53,0);
     opacity:0;
     pointer-events:none;
-    transition:opacity .25s ease, background .25s ease;
-    z-index:999;
+    transition:opacity .2s ease;
+    z-index:5;
 }
 .mark-overlay.is-active{
     opacity:1;
-    background:rgba(35,42,53,.14);
+}
+
+.answer-row.has-mark #answer{
+    padding-left:52px;
+    transition:padding-left .15s ease;
 }
 
 .mark-svg{
-    width:min(62vw,340px);
-    height:min(62vw,340px);
+    width:100%;
+    height:100%;
     display:none;
 }
 .mark-svg path{
@@ -373,7 +387,7 @@ button:focus-visible{ outline:2px solid var(--red-pen); outline-offset:2px; }
 .mark-svg--wrong path{ stroke-dasharray:260; stroke-dashoffset:260; }
 
 .mark-svg.draw path{
-    transition:stroke-dashoffset .55s ease;
+    transition:stroke-dashoffset .45s ease;
     stroke-dashoffset:0;
 }
 
