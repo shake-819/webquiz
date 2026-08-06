@@ -9,6 +9,14 @@ let myGrade = "中3"; // ログインユーザーの学年(チャットの絞り
 const category = document.getElementById("category");
 const question = document.getElementById("question");
 const answer = document.getElementById("answer");
+
+// 回答欄でEnterキーを押したら正誤判定する
+answer.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.isComposing) {
+        e.preventDefault();
+        submitAnswer();
+    }
+});
 const result = document.getElementById("result");
 
 const submitBtn = document.getElementById("submit");
