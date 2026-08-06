@@ -17,6 +17,36 @@ answer.addEventListener("keydown", (e) => {
         submitAnswer();
     }
 });
+
+// 採点マーク（◯/✓）を解答欄の横に表示する
+const markOverlay = document.getElementById("markOverlay");
+const answerRow = document.querySelector(".answer-row");
+function showMark(isCorrect) {
+    if (!markOverlay) return;
+
+    markOverlay.classList.remove("is-active", "is-correct", "is-wrong");
+    markOverlay.querySelectorAll(".mark-svg").forEach(svg => svg.classList.remove("draw"));
+
+    // リフローを挟んでアニメーションを再スタートさせる
+    void markOverlay.offsetWidth;
+
+    markOverlay.classList.add("is-active", isCorrect ? "is-correct" : "is-wrong");
+    answerRow?.classList.add("has-mark");
+
+    requestAnimationFrame(() => {
+        const svg = markOverlay.querySelector(
+            isCorrect ? ".mark-svg--correct" : ".mark-svg--wrong"
+        );
+        svg?.classList.add("draw");
+    });
+
+    // 次の問題に切り替わる前にフェードアウト
+    clearTimeout(showMark._timer);
+    showMark._timer = setTimeout(() => {
+        markOverlay.classList.remove("is-active");
+        answerRow?.classList.remove("has-mark");
+    }, 900);
+}
 const result = document.getElementById("result");
 
 const submitBtn = document.getElementById("submit");
@@ -285,6 +315,8 @@ async function submitAnswer() {
         result.textContent =
             `⭕ 正解！\n現在${newCorrect}問正解`;
 
+        showMark(true);
+
         answer.value = "";
 
         setTimeout(() => {
@@ -294,6 +326,7 @@ async function submitAnswer() {
     } else {
 
         result.textContent = "❌ 不正解";
+        showMark(false);
         answer.value = "";
     }
 
@@ -614,7 +647,7 @@ async function askAI(promptText, grade) {
                 "Authorization": `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: "openai/gpt-oss-120b",
+                model: "llama-3.3-70b-versatile",
                 messages: [
                     { role: "system", content: "あなたはクイズアプリのクラスチャットにいる親切なAIアシスタントです。日本語で簡潔に答えてください。わからないことは必ず分からないと言ってください。" },
                     { role: "user", content: promptText }
