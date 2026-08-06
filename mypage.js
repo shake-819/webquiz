@@ -364,6 +364,66 @@ document.getElementById("homeBtn")
     .addEventListener("click", () => {
         location.href = "toppage.html";
     });
+
+// ==========================
+// 記録リセット機能（Premium限定）
+// ==========================
+async function initResetButton() {
+    const btn = document.getElementById("resetStatsBtn");
+    if (!btn) return;
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: profile, error } = await supabaseClient
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !profile || profile.plan !== "premium") {
+        btn.remove(); // Free会員には表示しない
+        return;
+    }
+
+    btn.addEventListener("click", async () => {
+        const ok = confirm(
+            "教科別正答率・日別記録をすべて削除します。\nこの操作は取り消せません。よろしいですか？"
+        );
+        if (!ok) return;
+
+        btn.disabled = true;
+        btn.textContent = "削除中...";
+
+        const [{ error: err1 }, { error: err2 }] = await Promise.all([
+            supabaseClient
+                .from("user_category_stats")
+                .delete()
+                .eq("user_id", user.id),
+            supabaseClient
+                .from("user_daily_stats")
+                .delete()
+                .eq("user_id", user.id)
+        ]);
+
+        btn.disabled = false;
+        btn.textContent = "記録をリセット";
+
+        if (err1 || err2) {
+            console.error(err1, err2);
+            alert("削除に失敗しました。時間をおいて再度お試しください。");
+            return;
+        }
+
+        alert("記録をリセットしました。");
+        loadCategoryChart();
+        loadDailyChart();
+    });
+}
+
+initResetButton();
 loadBookmarks();
 loadCategoryChart();
 loadDailyChart();
