@@ -35,10 +35,22 @@
             <div id="question">問題を取得中...</div>
         </div>
 
-        <input
-            id="answer"
-            type="text"
-            placeholder="ここに答えを書く">
+        <div class="answer-row">
+            <input
+                id="answer"
+                type="text"
+                placeholder="ここに答えを書く">
+
+            <!-- 採点マーク演出（解答欄の横に表示） -->
+            <div id="markOverlay" class="mark-overlay" aria-hidden="true">
+                <svg id="markCorrect" class="mark-svg mark-svg--correct" viewBox="0 0 200 200">
+                    <path d="M14,100 C10,45 55,12 105,14 C158,16 192,42 188,102 C184,162 130,190 78,186 C28,182 8,148 16,96"/>
+                </svg>
+                <svg id="markWrong" class="mark-svg mark-svg--wrong" viewBox="0 0 200 200">
+                    <path d="M30,105 L82,155 L176,40"/>
+                </svg>
+            </div>
+        </div>
 
         <div class="btn-row">
             <button id="submit" class="btn-stamp">回答する</button>
@@ -72,15 +84,6 @@
 
 </div>
 
-<!-- 採点マーク演出 -->
-<div id="markOverlay" class="mark-overlay" aria-hidden="true">
-    <svg id="markCorrect" class="mark-svg mark-svg--correct" viewBox="0 0 200 200">
-        <path d="M14,100 C10,45 55,12 105,14 C158,16 192,42 188,102 C184,162 130,190 78,186 C28,182 8,148 16,96"/>
-    </svg>
-    <svg id="markWrong" class="mark-svg mark-svg--wrong" viewBox="0 0 200 200">
-        <path d="M30,105 L82,155 L176,40"/>
-    </svg>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
