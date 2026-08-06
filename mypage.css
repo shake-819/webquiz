@@ -56,9 +56,27 @@ body {
     border-bottom: 2px dashed #c9c2b2;
     padding-bottom: 8px;
     margin-top: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 .page-title:first-child {
     margin-top: 0;
+}
+.reset-btn {
+    font-family: 'Zen Kurenaido', sans-serif;
+    font-size: 13px;
+    color: #a94442;
+    background: #fdf0ef;
+    border: 1px solid #e0b4b4;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.reset-btn:hover {
+    background: #f9dedd;
 }
 
 .chart-box {
