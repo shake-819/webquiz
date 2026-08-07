@@ -2,28 +2,60 @@
 // プロフィールページ
 // ・自分のプロフィール: 画像/コメント選択・編集（Premium限定）
 // ・他ユーザーのプロフィール: ?user=<uuid> で閲覧（読み取り専用）
-// ・コレクション欄: 今後実装予定のイベント機能用のプレースホルダー
+// ・コレクション欄: イベントで入手予定のアイテム表示（現状はロック表示）
 // ・下部の統計（総回答数・正答率）は誰でも閲覧可能
+//
+// ▼ 画像は GitHub 上にアップロードした画像を参照します。
+//   （実運用時は GITHUB_ASSETS_BASE 以下に画像を置いてください）
+//
+// ▼「この人しか使えない」画像にしたい場合
+//   各プリセットに exclusiveTo: ["ユーザーのUUID", ...] を追加してください。
+//   ・exclusiveTo が無い（または空配列）→ Premiumユーザーなら誰でも選択可
+//   ・exclusiveTo がある            → そこに書かれたユーザーIDだけが選択・表示可
+//   ユーザーIDはSupabaseの Authentication > Users か、
+//   `select id from users where name = '...'` で確認できます。
+//
+//   ⚠️ 注意: これはあくまで「UI上」の制限です。ブラウザの開発者ツールから
+//   直接 supabase の update を呼べば理論上は誰でも書き込めてしまうため、
+//   本気で不正防止したい場合は Supabase 側（DB関数 / RLS）でも
+//   同様のチェックを行うことをおすすめします。
 // ==========================
 
+const GITHUB_ASSETS_BASE =
+    "https://raw.githubusercontent.com/shake-819/webquiz/main/assets";
+
 // ----- アバタープリセット -----
-// 実際にアップロード済みの画像がある場合は、各 preset の
-// `emoji` の代わりに `url:"avatars/xxx.png"` を追加すれば
-// renderAvatar() 側は自動的に画像を優先表示します。
 const AVATAR_PRESETS = [
-    { key: "star",   emoji: "⭐", bg: "#FBF3DD" },
-    { key: "book",   emoji: "📖", bg: "#EEF1F6" },
-    { key: "pencil", emoji: "✏️", bg: "#FDF1EF" },
-    { key: "cat",    emoji: "🐱", bg: "#F1F0EA" },
-    { key: "fox",    emoji: "🦊", bg: "#FBE9E0" },
-    { key: "crown",  emoji: "👑", bg: "#FBF3DD" },
-    { key: "heart",  emoji: "💮", bg: "#FDF1EF" },
-    { key: "bolt",   emoji: "⚡", bg: "#EAF1EE" }
+    { key: "avatar1", url: `${GITHUB_ASSETS_BASE}/avatars/avatar1.png` },
+    { key: "avatar2", url: `${GITHUB_ASSETS_BASE}/avatars/avatar2.png` },
+    { key: "avatar3", url: `${GITHUB_ASSETS_BASE}/avatars/avatar3.png` },
+    { key: "avatar4", url: `${GITHUB_ASSETS_BASE}/avatars/avatar4.png` },
+    { key: "avatar5", url: `${GITHUB_ASSETS_BASE}/avatars/avatar5.png` },
+    { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.png` },
+
+    // ↓ 特定ユーザー限定アバターの例。exclusiveTo にUUIDを入れて使う。
+    // { key: "avatar_special", name: "限定アバター",
+    //   url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.png`,
+    //   exclusiveTo: ["ここにユーザーUUID"] },
 ];
-const DEFAULT_AVATAR = { key: null, emoji: "🙂", bg: "#F5F3EC" };
+
+// ----- コレクションアイテム -----
+// イベントで入手する想定。exclusiveToで「入手済みの人」を指定する。
+// exclusiveTo未設定の状態＝まだ誰も入手していない（常にロック表示）。
+const COLLECTION_ITEMS = [
+    // { key: "summer2026", name: "夏祭り記念メダル",
+    //   url: `${GITHUB_ASSETS_BASE}/collection/summer2026.png`,
+    //   exclusiveTo: ["ここにユーザーUUID", "複数人いれば追加でUUID"] },
+];
+const COLLECTION_SLOT_COUNT = 6; // 左右3枠ずつ
+
+function isAllowed(preset, userId) {
+    if (!preset.exclusiveTo || preset.exclusiveTo.length === 0) return true;
+    return preset.exclusiveTo.includes(userId);
+}
 
 function getPreset(key) {
-    return AVATAR_PRESETS.find(p => p.key === key) || DEFAULT_AVATAR;
+    return AVATAR_PRESETS.find(p => p.key === key) || null;
 }
 
 // ----- 状態 -----
@@ -97,17 +129,21 @@ function renderProfile() {
 
     // 自分のプロフィールで、かつPremiumでない場合だけ案内を表示
     document.getElementById("premiumHint").hidden = !(isOwnProfile && !viewerIsPremium);
-
-    document.getElementById("backLink").href = isOwnProfile ? "toppage.html" : "toppage.html";
 }
 
 function renderAvatar(avatarKey) {
-    const preset = avatarKey ? getPreset(avatarKey) : DEFAULT_AVATAR;
     const el = document.getElementById("avatarPhoto");
-    el.style.background = preset.bg;
-    el.innerHTML = preset.url
-        ? `<img src="${preset.url}" alt="プロフィール画像">`
-        : `<span class="avatar-emoji">${preset.emoji}</span>`;
+    // すでに設定済みのアバターは、その後に限定対象から外れても
+    // 表示自体はそのまま維持する（「一度もらった称号は残る」的な挙動）
+    const preset = avatarKey ? getPreset(avatarKey) : null;
+
+    if (preset) {
+        el.style.background = "#fff";
+        el.innerHTML = `<img src="${preset.url}" alt="プロフィール画像" onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">`;
+    } else {
+        el.style.background = "#F5F3EC";
+        el.innerHTML = `<span class="avatar-fallback">🙂</span>`;
+    }
 }
 
 function renderComment(comment) {
@@ -128,20 +164,37 @@ function renderStats(correct, wrong) {
 }
 
 // ----- コレクション枠（左右） -----
-// 今後、イベントで入手したアイテムをここに表示する想定。
-// 現時点ではイベント機能が未実装のため、全枠ロック表示のプレースホルダー。
+// 表示対象ユーザー(viewedUserId)が exclusiveTo に含まれているアイテムだけ
+// 「入手済み」として表示し、残りはロック表示で埋める。
 function renderCollectionSlots() {
     const left = document.getElementById("collectionLeft");
     const right = document.getElementById("collectionRight");
     left.innerHTML = "";
     right.innerHTML = "";
 
-    for (let i = 0; i < 3; i++) {
-        left.appendChild(buildLockedSlot());
+    const unlocked = COLLECTION_ITEMS.filter(
+        item => item.exclusiveTo && item.exclusiveTo.includes(viewedUserId)
+    );
+
+    const slots = [];
+    for (let i = 0; i < COLLECTION_SLOT_COUNT; i++) {
+        slots.push(unlocked[i] ? buildUnlockedSlot(unlocked[i]) : buildLockedSlot());
     }
-    for (let i = 0; i < 3; i++) {
-        right.appendChild(buildLockedSlot());
-    }
+
+    slots.slice(0, 3).forEach(s => left.appendChild(s));
+    slots.slice(3, 6).forEach(s => right.appendChild(s));
+}
+
+function buildUnlockedSlot(item) {
+    const slot = document.createElement("div");
+    slot.className = "collection-slot is-unlocked";
+    slot.title = item.name || "";
+    slot.innerHTML = `
+        <img class="slot-img" src="${item.url}" alt="${item.name || ""}"
+             onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-lock',textContent:'🔒'}))">
+        ${item.name ? `<span class="slot-label">${item.name}</span>` : ""}
+    `;
+    return slot;
 }
 
 function buildLockedSlot() {
@@ -169,14 +222,20 @@ function openAvatarPicker() {
     const grid = document.getElementById("pickerGrid");
     grid.innerHTML = "";
 
-    AVATAR_PRESETS.forEach(preset => {
+    // 自分が使える（限定対象なら自分が指定されている）プリセットだけを表示
+    const available = AVATAR_PRESETS.filter(p => isAllowed(p, viewedUserId));
+
+    if (available.length === 0) {
+        grid.innerHTML = `<p class="picker-empty">選べる画像がまだありません</p>`;
+    }
+
+    available.forEach(preset => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "picker-item";
-        btn.style.background = preset.bg;
-        btn.innerHTML = preset.url
-            ? `<img src="${preset.url}" alt="">`
-            : `<span>${preset.emoji}</span>`;
+        btn.title = preset.name || "";
+        btn.innerHTML = `<img src="${preset.url}" alt="${preset.name || ""}"
+            onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🙂'}))">`;
         btn.addEventListener("click", () => selectAvatar(preset.key));
         grid.appendChild(btn);
     });
@@ -190,6 +249,10 @@ function closeAvatarPicker() {
 
 async function selectAvatar(key) {
     if (!isOwnProfile || !viewerIsPremium) return;
+
+    // 選択直前にも念のため権限を再チェック
+    const preset = getPreset(key);
+    if (!preset || !isAllowed(preset, viewedUserId)) return;
 
     const { error } = await supabaseClient
         .from("users")
