@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Master | サイコロの旅</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --paper:       #F5F3EC;
+    --paper-line:  #DAD4C4;
+    --ink:         #232A35;
+    --ink-soft:    #6B7280;
+    --red-pen:     #C6423A;
+    --navy:        #2E3E5C;
+    --gold:        #B8912E;
+    --gold-soft:   #E4CB86;
+    --sage:        #52745A;
+    --card-bg:     #FFFFFE;
+    --shadow:      rgba(35,42,53,.10);
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    color:var(--ink);
+    background:
+        repeating-linear-gradient(
+            var(--paper) 0px, var(--paper) 35px,
+            var(--paper-line) 36px, var(--paper) 37px
+        );
+    min-height:100vh;
+}
+
+.back-link{
+    display:inline-block;
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-decoration:none;
+    margin:20px 0 0 20px;
+}
+.back-link:hover{ color:var(--red-pen); }
+
+.wrap{
+    width:92%;
+    max-width:720px;
+    margin:0 auto;
+    padding:20px 0 80px;
+}
+
+.event-sheet{
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 14px 34px var(--shadow);
+    padding:clamp(24px,5vw,44px);
+}
+
+.event-head{ text-align:center; margin-bottom:28px; }
+.event-head .eyebrow{
+    font-family:"Klee One", cursive;
+    font-size:13px;
+    color:var(--gold);
+    border:1px solid var(--gold-soft);
+    border-radius:4px;
+    padding:2px 12px;
+    display:inline-block;
+    transform:rotate(-2deg);
+    margin-bottom:10px;
+}
+.event-head h1{
+    font-family:"Zen Old Mincho", serif;
+    font-size:26px;
+}
+.event-head p{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin-top:8px;
+}
+
+/* ===== サイコロ・獲得状況 ===== */
+
+.dice-panel{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    padding:20px 24px;
+    margin-bottom:26px;
+}
+
+.dice-status h3{
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+}
+.dice-status .count{
+    font-family:"Zen Old Mincho", serif;
+    font-size:28px;
+    font-weight:700;
+    color:var(--red-pen);
+}
+.dice-status .count .unit{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+}
+#untilNext{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+.die-face{
+    font-size:44px;
+    line-height:1;
+}
+
+button{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    cursor:pointer;
+    border-radius:2px;
+}
+
+#rollBtn{
+    font-weight:900;
+    font-size:15px;
+    color:#fff;
+    background:var(--red-pen);
+    border:none;
+    padding:13px 26px;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .2s;
+}
+#rollBtn:hover:not(:disabled){ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+#rollBtn:disabled{ opacity:.4; cursor:not-allowed; box-shadow:2px 2px 0 var(--ink); }
+
+.roll-log{
+    min-height:20px;
+    text-align:center;
+    font-family:"Klee One", cursive;
+    font-size:14px;
+    color:var(--ink);
+    margin-bottom:24px;
+}
+.roll-log p{ margin:2px 0; }
+
+/* ===== マス目マップ ===== */
+
+.map-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.board{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:6px 4px 16px;
+    margin-bottom:30px;
+    scroll-behavior:smooth;
+}
+
+.sq{
+    flex:0 0 auto;
+    width:52px; height:52px;
+    border:1.5px dashed var(--paper-line);
+    border-radius:6px;
+    background:var(--card-bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    font-size:11px;
+    color:var(--ink-soft);
+}
+.sq-num{ font-weight:700; }
+.sq-icon{ font-size:15px; margin-top:2px; }
+.sq-token{
+    position:absolute;
+    top:-14px;
+    font-size:18px;
+}
+.sq.is-current{
+    border-style:solid;
+    border-color:var(--red-pen);
+    background:#FDF1EF;
+    color:var(--ink);
+}
+
+/* ===== 順位表 ===== */
+
+.leader-title{
+    font-family:"Zen Old Mincho", serif;
+    font-size:17px;
+    margin-bottom:12px;
+}
+
+#leaderboard{ list-style:none; margin-bottom:26px; }
+#leaderboard li{
+    display:flex;
+    justify-content:space-between;
+    padding:11px 4px;
+    border-bottom:1px dashed var(--paper-line);
+    font-size:14.5px;
+}
+#leaderboard li:last-child{ border-bottom:none; }
+#leaderboard li.empty{ color:var(--ink-soft); justify-content:center; }
+
+/* ===== ルール ===== */
+
+.rules{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.9;
+    padding-top:20px;
+    border-top:1px dashed var(--paper-line);
+}
+.rules li{ margin-left:1.1em; }
+</style>
+</head>
+
+<body>
+
+<a class="back-link" href="toppage.html">← ホームに戻る</a>
+
+<main class="wrap">
+    <div class="event-sheet">
+
+        <div class="event-head">
+            <span class="eyebrow">EVENT</span>
+            <h1>🎲 サイコロの旅</h1>
+            <p>クイズを10問解くごとにサイコロが1個もらえます。振って、マス目を進もう。</p>
+        </div>
+
+        <div class="dice-panel">
+            <div class="dice-status">
+                <h3>使えるサイコロ</h3>
+                <p class="count"><span id="diceCount">0</span><span class="unit">個</span></p>
+                <p id="untilNext"></p>
+            </div>
+            <div class="die-face" id="dieFace">⚀</div>
+            <button id="rollBtn" disabled>サイコロを振る</button>
+        </div>
+
+        <div class="roll-log" id="rollLog"></div>
+
+        <div class="map-label">
+            <span>マップ（現在地: <span id="positionText">0</span>マス目）</span>
+            <span>🎁 得点マス / ⚠️ 落とし穴</span>
+        </div>
+        <div class="board" id="board"></div>
+
+        <h2 class="leader-title">🏆 いちばん遠くまで進んだ人 TOP3</h2>
+        <ul id="leaderboard"></ul>
+
+        <ul class="rules">
+            <li>クイズ10問解答ごとにサイコロ1個を獲得（正解・不正解は問いません）</li>
+            <li>マス目の仕掛けはこのイベント内の移動距離だけに影響し、正答率など他の成績データは変化しません</li>
+            <li>イベント終了時、最も遠くまで進んだ上位3名に記念のプロフィールコレクションを進呈します</li>
+        </ul>
+
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="idle-logout.js"></script>
+<script src="event-dice.js"></script>
+
+</body>
+</html>
