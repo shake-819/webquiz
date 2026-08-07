@@ -386,6 +386,7 @@ footer{
     <nav>
         <button onclick="location.href='index.html'">クイズ</button>
         <button onclick="location.href='mypage.html'">マイページ</button>
+        <button onclick="location.href='profile.html'">プロフィール</button>
         <button class="is-current" onclick="location.href='premium.html'">Premium</button>
         <button id="logout" class="tab-logout">ログアウト</button>
     </nav>
@@ -431,26 +432,32 @@ footer{
             <h3>AIサポート</h3>
             <p>分からない問題をその場で質問。つまずきをすぐ解消できます。</p>
         </div>
-        <div class="feature-card">
-            <svg class="icon" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="1.8"
-                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 6c-1-1.3-2.8-2-4.5-2H4v14h3.5c1.7 0 3.5.7 4.5 2 1-1.3 2.8-2 4.5-2H20V4h-3.5C14.8 4 13 4.7 12 6z"/>
-                <path d="M12 6v14"/>
-                <path d="M15 4v6l-1.5-1-1.5 1V4"/>
-            </svg>
 
+        <div class="feature-card">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M6 3h12v18l-6-4.5L6 21V3z"/>
+            </svg>
             <h3>ブックマーク機能</h3>
             <p>忘れそうな問題をその場ですぐブックマーク。いつでも見返せます。</p>
         </div>
+
         <div class="feature-card">
             <svg class="icon" viewBox="0 0 24 24">
-                <path d="M6 3h10l2 2v16H6z"/>
-                <path d="M9 3v6h6V3"/>
-                <rect x="9" y="14" width="6" height="4"/>
+                <path d="M5 3h11l3 3v15H5z"/>
+                <path d="M8 3v5h7V3"/>
+                <rect x="8" y="13" width="8" height="6"/>
             </svg>
             <h3>データ永続化</h3>
             <p>学習データを安全に保存。端末を変えても、いつでも続きから学習できます。</p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>
+            </svg>
+            <h3>プロフィールカスタマイズ</h3>
+            <p>プロフィール写真やひとことコメントを設定して、自分だけのページに。イベント限定コレクションも今後追加予定です。</p>
         </div>
 
     </div>
@@ -500,6 +507,19 @@ footer{
                 </tr>
                 <tr>
                     <td>データ永続化</td>
+                    <td>
+                        <svg class="mark no" width="18" height="18" viewBox="0 0 18 18">
+                            <path d="M4 4l10 10M14 4L4 14"/>
+                        </svg>
+                    </td>
+                    <td class="is-premium">
+                        <svg class="mark ok" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/>
+                        </svg>
+                    </td>
+                </tr>
+                <tr>
+                    <td>プロフィールカスタマイズ</td>
                     <td>
                         <svg class="mark no" width="18" height="18" viewBox="0 0 18 18">
                             <path d="M4 4l10 10M14 4L4 14"/>
