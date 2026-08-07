@@ -26,12 +26,12 @@ const GITHUB_ASSETS_BASE =
 
 // ----- アバタープリセット -----
 const AVATAR_PRESETS = [
-    { key: "avatar1", url: `${GITHUB_ASSETS_BASE}/avatars/avatar1.png` },
-    { key: "avatar2", url: `${GITHUB_ASSETS_BASE}/avatars/avatar2.png` },
-    { key: "avatar3", url: `${GITHUB_ASSETS_BASE}/avatars/avatar3.png` },
-    { key: "avatar4", url: `${GITHUB_ASSETS_BASE}/avatars/avatar4.png` },
-    { key: "avatar5", url: `${GITHUB_ASSETS_BASE}/avatars/avatar5.png` },
-    { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.png` },
+    { key: "avatar1", url: `${GITHUB_ASSETS_BASE}/avatars/avatar1.jpg` },
+    { key: "avatar2", url: `${GITHUB_ASSETS_BASE}/avatars/avatar2.jpg` },
+    { key: "avatar3", url: `${GITHUB_ASSETS_BASE}/avatars/avatar3.jpg` },
+    { key: "avatar4", url: `${GITHUB_ASSETS_BASE}/avatars/avatar4.jpg` },
+    { key: "avatar5", url: `${GITHUB_ASSETS_BASE}/avatars/avatar5.jpg` },
+    { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.jpg` },
     { key: "avatar_special", name: "admin専用アバター",
       url: `${GITHUB_ASSETS_BASE}/avatars/summer school swimsuit.jpg`,
       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] 
