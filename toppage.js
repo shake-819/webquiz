@@ -56,7 +56,7 @@
 
     const { data, error } = await supabaseClient
         .from("users")
-        .select("name,score")
+        .select("id,name,score")
         .order("score", { ascending: false })
         .limit(10);
 
@@ -79,7 +79,7 @@
 
         ranking.innerHTML += `
         <li>
-            <span>${rank} ${user.name}</span>
+            <a class="rank-name-link" href="profile.html?user=${user.id}">${rank} ${user.name}</a>
             <span>${user.score}pt</span>
         </li>
         `;
