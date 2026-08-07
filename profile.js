@@ -33,7 +33,7 @@ const AVATAR_PRESETS = [
     { key: "avatar5", url: `${GITHUB_ASSETS_BASE}/avatars/avatar5.png` },
     { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.png` },
     { key: "avatar_special", name: "admin専用アバター",
-      url: `${GITHUB_ASSETS_BASE}/avatars/summer school suimsuit.png`,
+      url: `${GITHUB_ASSETS_BASE}/avatars/summer school swimsuit.jpg`,
       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] 
     },
 
