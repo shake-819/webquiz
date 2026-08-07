@@ -388,6 +388,13 @@ main{ position:relative; z-index:1; }
 }
 .rank-num.gold{ border-color:var(--gold); color:var(--gold); background:#FBF3DD; }
 
+.rank-name-link{
+    color:var(--ink);
+    text-decoration:none;
+    font-weight:700;
+}
+.rank-name-link:hover{ color:var(--red-pen); text-decoration:underline; }
+
 /* ===== Premium：先生イチオシプリント ===== */
 
 .premium-sheet{ padding:0 clamp(20px,6vw,56px) 0 clamp(64px,10vw,90px); }
@@ -492,6 +499,7 @@ footer{
     <nav>
         <button onclick="location.href='index.html'">クイズ</button>
         <button onclick="location.href='mypage.html'">マイページ</button>
+        <button onclick="location.href='profile.html'">プロフィール</button>
         <button onclick="location.href='premium.html'">Premium</button>
         <button id="logout" class="tab-logout">ログアウト</button>
     </nav>
