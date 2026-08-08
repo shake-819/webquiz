@@ -56,7 +56,7 @@ const AVATAR_PRESETS = [
      { key: "avatar_summer", name: "summer",
        layered: {
            front: `${GITHUB_ASSETS_BASE}/avatars/summer_front.png`,
-           back:  `${GITHUB_ASSETS_BASE}/summer school swimsuit.jpg`
+           back:  `${GITHUB_ASSETS_BASE}/avatars/summer school swimsuit.jpg`
        },
        exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
