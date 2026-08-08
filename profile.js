@@ -32,6 +32,15 @@
 //   3. プリセットに url の代わりに layered:{front, back} を書く（下の例）。
 //      front/backの両方を指定したアバターだけ、自動でこの演出になります。
 //      url だけのアバターは今までどおりの静止画のままです。
+//
+// ▼ 切り抜き位置の調整
+//   丸い/四角いアバター枠は object-fit:cover で画像を敷き詰めているので、
+//   何も指定しないと画像の「真ん中」を基準に上下左右が均等に切り取られます。
+//   人物が上寄り・下寄りの画像だと不自然に切れることがあるので、
+//   プリセットごとに focus: "横% 縦%" で基準位置をずらせます。
+//   例) focus: "50% 30%" → 画像の上寄りを基準にする（下側が多く切れる）
+//       focus: "50% 70%" → 画像の下寄りを基準にする（上側が多く切れる＝もっと下を見せたい時）
+//   指定しなければ "50% 50%"（中央）になります。
 // ==========================
 
 const GITHUB_ASSETS_BASE =
@@ -47,18 +56,20 @@ const AVATAR_PRESETS = [
     { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.jpg` },
 
     // ↓ 特定ユーザー限定アバターの例。exclusiveTo にUUIDを入れて使う。
-     { key: "avatar_special", name: "限定アバター",
+    { key: "avatar_special", name: "限定アバター",
         url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.jpg`,
         exclusiveTo: ["ここにユーザーUUID"] },
 
     // ↓ 「浮く・波打つ・水しぶき」の本格演出付きアバターの例。
-       //front(キャラの透過PNG) と back(背景) を両方指定すると自動でこの演出になる。
-     { key: "avatar_summer", name: "summer",
-       layered: {
-           front: `${GITHUB_ASSETS_BASE}/avatars/summer_front.png`,
-           back:  `${GITHUB_ASSETS_BASE}/avatars/summer school swimsuit.jpg`
-       },
-       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
+    // front(キャラの透過PNG) と back(背景) を両方指定すると自動でこの演出になる。
+    // focus で切り抜き位置も調整できる（下寄りを見せたいので縦70%に）。
+    { key: "avatar_summer", name: "summer",
+        layered: {
+            front: `${GITHUB_ASSETS_BASE}/avatars/summer_front.png`,
+            back:  `${GITHUB_ASSETS_BASE}/avatars/summer school swimsuit.jpg`
+        },
+        focus: "50% 70%",
+        exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 
 // ----- コレクションアイテム -----
@@ -178,6 +189,8 @@ function renderAvatar(avatarKey) {
         return;
     }
 
+    const focus = preset.focus || "50% 50%";
+
     if (preset.layered) {
         el.style.background = "#fff";
         el.innerHTML = `
@@ -188,6 +201,7 @@ function renderAvatar(avatarKey) {
                 </div>
                 <div class="avl-shimmer"></div>
                 <img class="avl-front" src="${preset.layered.front}" alt="プロフィール画像"
+                     style="object-position:${focus}"
                      onerror="this.style.display='none'">
                 <div class="avl-splash"></div>
             </div>
@@ -195,7 +209,9 @@ function renderAvatar(avatarKey) {
         avatarSplashTimer = startAvatarSplash(el.querySelector(".avl-splash"));
     } else {
         el.style.background = "#fff";
-        el.innerHTML = `<img src="${preset.url}" alt="プロフィール画像" onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">`;
+        el.innerHTML = `<img src="${preset.url}" alt="プロフィール画像"
+            style="object-position:${focus}"
+            onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">`;
     }
 }
 
@@ -308,6 +324,7 @@ function openAvatarPicker() {
         btn.className = "picker-item";
         btn.title = preset.name || "";
         btn.innerHTML = `<img src="${getPresetThumbnail(preset)}" alt="${preset.name || ""}"
+            style="object-position:${preset.focus || "50% 50%"}"
             onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🙂'}))">`;
         btn.addEventListener("click", () => selectAvatar(preset.key));
         grid.appendChild(btn);
