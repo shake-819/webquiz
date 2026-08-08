@@ -19,6 +19,19 @@
 //   直接 supabase の update を呼べば理論上は誰でも書き込めてしまうため、
 //   本気で不正防止したい場合は Supabase 側（DB関数 / RLS）でも
 //   同様のチェックを行うことをおすすめします。
+//
+// ▼「浮く・波打つ・水しぶき」の本格演出を付けたいアバターの作り方
+//   1. 元画像から、キャラだけを透過PNGで切り抜く（背景除去ツール。
+//      rembgというツールを使う場合の例:
+//        pip install rembg onnxruntime
+//        python3 -c "from rembg import remove;
+//                     open('front.png','wb').write(remove(open('元画像.png','rb').read()))"
+//      ツールを入れたくない場合は remove.bg などのWebサービスでもOK。
+//   2. 切り抜いた透過PNG（front）と、元の背景ごとの画像（back）の
+//      2枚をどちらも assets/avatars/ に置く。
+//   3. プリセットに url の代わりに layered:{front, back} を書く（下の例）。
+//      front/backの両方を指定したアバターだけ、自動でこの演出になります。
+//      url だけのアバターは今までどおりの静止画のままです。
 // ==========================
 
 const GITHUB_ASSETS_BASE =
@@ -32,15 +45,20 @@ const AVATAR_PRESETS = [
     { key: "avatar4", url: `${GITHUB_ASSETS_BASE}/avatars/avatar4.jpg` },
     { key: "avatar5", url: `${GITHUB_ASSETS_BASE}/avatars/avatar5.jpg` },
     { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.jpg` },
-    { key: "avatar_special", name: "admin専用アバター",
-      url: `${GITHUB_ASSETS_BASE}/avatars/summer school swimsuit.jpg`,
-      exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] 
-    },
 
     // ↓ 特定ユーザー限定アバターの例。exclusiveTo にUUIDを入れて使う。
-    // { key: "avatar_special", name: "限定アバター",
-    //   url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.png`,
-    //   exclusiveTo: ["ここにユーザーUUID"] },
+     { key: "avatar_special", name: "限定アバター",
+        url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.jpg`,
+        exclusiveTo: ["ここにユーザーUUID"] },
+
+    // ↓ 「浮く・波打つ・水しぶき」の本格演出付きアバターの例。
+       //front(キャラの透過PNG) と back(背景) を両方指定すると自動でこの演出になる。
+     { key: "avatar_summer", name: "summer",
+       layered: {
+           front: `${GITHUB_ASSETS_BASE}/avatars/summer_front.png`,
+           back:  `${GITHUB_ASSETS_BASE}/summer school swimsuit.jpg`
+       },
+       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 
 // ----- コレクションアイテム -----
@@ -62,11 +80,17 @@ function getPreset(key) {
     return AVATAR_PRESETS.find(p => p.key === key) || null;
 }
 
+// ピッカーでのサムネイル表示に使う画像（layeredならfrontを使う）
+function getPresetThumbnail(preset) {
+    return preset.thumbnail || (preset.layered ? preset.layered.front : preset.url);
+}
+
 // ----- 状態 -----
 let viewedUserId = null;
 let isOwnProfile = false;
 let currentProfile = null; // 表示対象ユーザーの users 行
 let viewerIsPremium = false; // 自分自身がPremiumかどうか
+let avatarSplashTimer = null; // 本格演出アバターの水しぶき用タイマー
 
 const params = new URLSearchParams(location.search);
 
@@ -137,17 +161,62 @@ function renderProfile() {
 
 function renderAvatar(avatarKey) {
     const el = document.getElementById("avatarPhoto");
+
+    // アバターを切り替えるたびに、前の演出の水しぶきタイマーは必ず止める
+    if (avatarSplashTimer) {
+        clearInterval(avatarSplashTimer);
+        avatarSplashTimer = null;
+    }
+
     // すでに設定済みのアバターは、その後に限定対象から外れても
     // 表示自体はそのまま維持する（「一度もらった称号は残る」的な挙動）
     const preset = avatarKey ? getPreset(avatarKey) : null;
 
-    if (preset) {
-        el.style.background = "#fff";
-        el.innerHTML = `<img src="${preset.url}" alt="プロフィール画像" onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">`;
-    } else {
+    if (!preset) {
         el.style.background = "#F5F3EC";
         el.innerHTML = `<span class="avatar-fallback">🙂</span>`;
+        return;
     }
+
+    if (preset.layered) {
+        el.style.background = "#fff";
+        el.innerHTML = `
+            <div class="avl">
+                <div class="avl-wave">
+                    <img src="${preset.layered.back}" alt=""
+                         onerror="this.parentElement.style.display='none'">
+                </div>
+                <div class="avl-shimmer"></div>
+                <img class="avl-front" src="${preset.layered.front}" alt="プロフィール画像"
+                     onerror="this.style.display='none'">
+                <div class="avl-splash"></div>
+            </div>
+        `;
+        avatarSplashTimer = startAvatarSplash(el.querySelector(".avl-splash"));
+    } else {
+        el.style.background = "#fff";
+        el.innerHTML = `<img src="${preset.url}" alt="プロフィール画像" onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">`;
+    }
+}
+
+// 本格演出アバターの水しぶき粒を定期生成する
+function startAvatarSplash(layer) {
+    if (!layer) return null;
+
+    function spawnDrop() {
+        const d = document.createElement("div");
+        d.className = "avl-drop";
+        const size = 3 + Math.random() * 5;
+        d.style.width = size + "px";
+        d.style.height = size + "px";
+        d.style.left = Math.random() * 100 + "%";
+        d.style.animationDuration = (1.1 + Math.random() * 1.1) + "s";
+        layer.appendChild(d);
+        setTimeout(() => d.remove(), 2400);
+    }
+
+    for (let i = 0; i < 6; i++) setTimeout(spawnDrop, i * 90);
+    return setInterval(spawnDrop, 220);
 }
 
 function renderComment(comment) {
@@ -238,7 +307,7 @@ function openAvatarPicker() {
         btn.type = "button";
         btn.className = "picker-item";
         btn.title = preset.name || "";
-        btn.innerHTML = `<img src="${preset.url}" alt="${preset.name || ""}"
+        btn.innerHTML = `<img src="${getPresetThumbnail(preset)}" alt="${preset.name || ""}"
             onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🙂'}))">`;
         btn.addEventListener("click", () => selectAvatar(preset.key));
         grid.appendChild(btn);
