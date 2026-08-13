@@ -647,7 +647,7 @@ async function askAI(promptText, grade) {
                 "Authorization": `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: "gpt-oss-120b",
+                model: "openai/gpt-oss-120b",
                 messages: [
                     { role: "system", content: "あなたはクイズアプリのクラスチャットにいる親切なAIアシスタントです。日本語で簡潔に答えてください。わからないことは必ず分からないと言ってください。" },
                     { role: "user", content: promptText }
