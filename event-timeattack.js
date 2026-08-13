@@ -1,47 +1,3 @@
-// ==========================
-// イベント: タイムアタッククイズ
-// ・制限時間60秒、全カテゴリからランダム出題
-// ・スキップで-5秒、リタイアで即終了
-// ・正解数の自己ベストを timeattack_scores に保存し、ランキング表示
-// ・プレイ1回ごとの詳細（正解数・不正解数・スキップ回数など）は
-//   timeattack_runs に全件記録（ランキングには使わない、集計・履歴用）
-// ・一定数以上の正解で限定アバターが解放される（判定は profile.js 側）
-//
-// 既存の app.js / index.html のクイズ機能・成績データ（users テーブルの
-// score, correct, wrong など）には一切書き込みません。完全に独立した
-// イベント専用テーブル（timeattack_scores / timeattack_runs）だけを使います。
-//
-// このファイルと event-timeattack.html を削除すれば、イベントは完全に消えます。
-//
-// ▼ 必要なテーブル（Supabase SQL Editorで一度だけ実行）
-//
-//   -- ランキング用：ユーザーごとの自己ベストだけを持つ
-//   create table timeattack_scores (
-//     user_id uuid primary key references auth.users(id) on delete cascade,
-//     best_score integer not null default 0,
-//     updated_at timestamptz not null default now()
-//   );
-//   alter table timeattack_scores enable row level security;
-//   create policy "select all" on timeattack_scores for select using (true);
-//   create policy "insert own" on timeattack_scores for insert with check (auth.uid() = user_id);
-//   create policy "update own" on timeattack_scores for update using (auth.uid() = user_id);
-//
-//   -- 集計・履歴用：プレイ1回ごとの結果を全件保存
-//   create table timeattack_runs (
-//     id bigint generated always as identity primary key,
-//     user_id uuid not null references auth.users(id) on delete cascade,
-//     correct_count integer not null default 0,
-//     wrong_count integer not null default 0,
-//     skip_count integer not null default 0,
-//     score integer not null default 0,
-//     retired boolean not null default false,
-//     played_at timestamptz not null default now()
-//   );
-//   alter table timeattack_runs enable row level security;
-//   create policy "select own" on timeattack_runs for select using (auth.uid() = user_id);
-//   create policy "insert own" on timeattack_runs for insert with check (auth.uid() = user_id);
-// ==========================
-
 const API_URLS = {
     "中3": "https://sheet2api.com/v1/29AXFCHHTfS7/3",
     "高3": "https://sheet2api.com/v1/29AXFCHHTfS7/discord"
@@ -227,13 +183,14 @@ function submitAnswer() {
         updateScoreDisplay();
         flashEl.textContent = "⭕ 正解！";
         flashEl.className = "flash correct";
+        nextQuestion();
     } else {
         wrongCount += 1;
-        flashEl.textContent = `❌ 不正解（正解: ${currentQuestion.answer}）`;
+        flashEl.textContent = "❌ 不正解！もう一度入力してみよう";
         flashEl.className = "flash wrong";
+        answerInput.value = "";
     }
 
-    nextQuestion();
     answerInput.focus();
 }
 
