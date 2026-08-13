@@ -20,6 +20,7 @@
     --red-pen-soft:#E2857D;
     --navy:        #2E3E5C;
     --gold:        #B8912E;
+    --gold-soft:   #E4CB86;
     --sage:        #52745A;
     --card-bg:     #FFFFFE;
     --shadow:      rgba(35,42,53,.10);
@@ -446,6 +447,67 @@ main{ position:relative; z-index:1; }
 .btn-stamp.premium-btn{ box-shadow:3px 3px 0 var(--red-pen-soft); }
 .btn-stamp.premium-btn:hover{ box-shadow:5px 5px 0 var(--red-pen-soft); }
 
+/* ===== イベント ===== */
+
+.events-sheet{ padding:0 clamp(20px,6vw,56px) 0 clamp(64px,10vw,90px); }
+
+.events-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+    gap:18px;
+    max-width:900px;
+}
+
+.event-card{
+    display:block;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    border-top:3px solid var(--gold);
+    box-shadow:0 10px 24px var(--shadow);
+    padding:24px 24px 22px;
+    text-decoration:none;
+    color:var(--ink);
+    position:relative;
+    transition:transform .15s ease, box-shadow .15s ease;
+}
+.event-card:hover{ transform:translateY(-3px); box-shadow:0 16px 30px var(--shadow); }
+.event-card:focus-visible{ outline:2px solid var(--red-pen); outline-offset:3px; }
+
+.event-card .tag{
+    font-family:"Klee One", cursive;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--gold);
+    border:1px solid var(--gold-soft,var(--gold));
+    border-radius:4px;
+    padding:2px 9px;
+    display:inline-block;
+    transform:rotate(-2deg);
+    margin-bottom:12px;
+}
+.event-card.is-new .tag{ color:var(--red-pen); border-color:var(--red-pen-soft); }
+
+.event-card .icon{ font-size:30px; line-height:1; margin-bottom:12px; display:block; }
+
+.event-card h3{
+    font-family:"Zen Old Mincho", serif;
+    font-size:19px;
+    font-weight:700;
+    margin-bottom:8px;
+}
+.event-card p{
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink-soft);
+}
+.event-card .go{
+    display:inline-block;
+    margin-top:14px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--red-pen);
+}
+
 /* ===== 配布プリント（お知らせ） ===== */
 
 .notice-sheet{ padding:0 clamp(20px,6vw,56px) 80px clamp(64px,10vw,90px); }
@@ -574,7 +636,26 @@ footer{
         <button class="btn-stamp premium-btn" onclick="location.href='premium.html'">Premiumになる</button>
     </div>
 </section>
-<a href="event-dice.html">🎲 サイコロの旅</a>
+<section class="sheet-section events-sheet reveal">
+    <h2 class="section-title">イベント<span class="en">EVENTS</span></h2>
+    <div class="events-grid">
+        <a class="event-card" href="event-dice.html">
+            <span class="tag">開催中</span>
+            <span class="icon">🎲</span>
+            <h3>サイコロの旅</h3>
+            <p>クイズ10問解くごとにサイコロが1個。振ってマス目を進み、コレクションを集めよう。</p>
+            <span class="go">遊びに行く →</span>
+        </a>
+        <a class="event-card is-new" href="event-timeattack.html">
+            <span class="tag">NEW</span>
+            <span class="icon">⏱️</span>
+            <h3>タイムアタッククイズ</h3>
+            <p>制限時間60秒、全カテゴリからランダム出題。たくさん正解してランキング上位＆限定アバターを目指そう。</p>
+            <span class="go">挑戦する →</span>
+        </a>
+    </div>
+</section>
+
 <section class="sheet-section notice-sheet reveal">
     <h2 class="section-title">配布プリント<span class="en">NOTICE</span></h2>
     <div class="notice-list">
