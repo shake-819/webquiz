@@ -546,6 +546,220 @@ footer{
     font-size:13px;
     color:var(--ink-soft);
 }
+
+/* ===== 固定ボタン（お問い合わせ / メールボックス） ===== */
+
+.fab{
+    position:fixed;
+    bottom:22px;
+    z-index:60;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    color:#fff;
+    border:none;
+    padding:13px 20px 13px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 8px 20px var(--shadow), 3px 3px 0 var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease;
+}
+.fab:hover{ transform:translateY(-2px); box-shadow:0 10px 24px var(--shadow), 4px 4px 0 var(--ink); }
+.fab:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+.fab .fab-icon{ font-size:17px; line-height:1; }
+
+.fab-contact{ right:22px; background:var(--red-pen); }
+.fab-mailbox{ left:22px; background:var(--navy); }
+
+.fab-badge{
+    position:absolute;
+    top:-5px; right:-5px;
+    min-width:18px; height:18px;
+    padding:0 4px;
+    border-radius:999px;
+    background:var(--gold);
+    color:#fff;
+    font-size:10.5px;
+    font-weight:900;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 0 2px var(--paper);
+}
+
+@media (max-width:520px){
+    .fab{ padding:12px 16px 12px 13px; font-size:0; gap:0; }
+    .fab .fab-icon{ font-size:19px; }
+    .fab-label{ display:none; }
+}
+
+/* ===== モーダル共通（お問い合わせ / メールボックス） ===== */
+
+.modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(35,42,53,.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:100;
+}
+.modal-overlay[hidden]{ display:none; }
+
+.modal-card{
+    width:100%;
+    max-width:480px;
+    max-height:82vh;
+    overflow-y:auto;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 20px 50px rgba(35,42,53,.28);
+    padding:26px clamp(20px,5vw,32px) 28px;
+    position:relative;
+}
+
+.modal-close{
+    position:absolute;
+    top:14px; right:14px;
+    width:30px; height:30px;
+    border-radius:50%;
+    border:1px solid var(--paper-line);
+    background:#fff;
+    color:var(--ink-soft);
+    font-size:15px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.modal-close:hover{ border-color:var(--red-pen); color:var(--red-pen); }
+
+.modal-head{ margin-bottom:18px; }
+.modal-head .eyebrow{
+    font-family:"Klee One", cursive;
+    font-size:12px;
+    font-weight:700;
+    padding:2px 10px;
+    border-radius:4px;
+    display:inline-block;
+    transform:rotate(-2deg);
+    margin-bottom:8px;
+}
+.modal-head h2{ font-family:"Zen Old Mincho", serif; font-size:20px; }
+.modal-head p{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+.modal-contact .eyebrow{ color:var(--red-pen); border:1px solid var(--red-pen-soft); }
+.modal-mailbox .eyebrow{ color:var(--navy); border:1px solid var(--navy); }
+
+/* --- お問い合わせフォーム --- */
+
+.form-row{ margin-bottom:14px; }
+.form-row label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+}
+.form-row select,
+.form-row textarea{
+    width:100%;
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:14.5px;
+    padding:11px 12px;
+    border:1px solid var(--paper-line);
+    background:var(--paper);
+    color:var(--ink);
+}
+.form-row textarea{ min-height:110px; resize:vertical; }
+.form-row select:focus,
+.form-row textarea:focus{ outline:none; border-color:var(--red-pen); }
+
+.form-msg{ font-size:12.5px; min-height:18px; margin-bottom:10px; }
+.form-msg.ok{ color:var(--sage); }
+.form-msg.err{ color:var(--red-pen); }
+
+.history-title{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin:22px 0 10px;
+    padding-top:16px;
+    border-top:1px dashed var(--paper-line);
+}
+.history-list{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+.history-item{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    padding:11px 13px;
+    font-size:12.5px;
+}
+.history-item .meta{
+    display:flex;
+    justify-content:space-between;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-size:11.5px;
+}
+.history-item .status{
+    font-weight:700;
+    padding:1px 7px;
+    border-radius:3px;
+}
+.history-item .status.open{ color:var(--ink-soft); background:#EDEBE3; }
+.history-item .status.replied{ color:#fff; background:var(--sage); }
+.history-item .msg{ line-height:1.6; white-space:pre-wrap; }
+.history-item .reply{
+    margin-top:8px;
+    padding:8px 10px;
+    background:#fff;
+    border-left:3px solid var(--sage);
+    line-height:1.6;
+    white-space:pre-wrap;
+}
+.history-empty{ font-size:12.5px; color:var(--ink-soft); text-align:center; padding:10px 0; }
+
+/* --- メールボックス（通知センター） --- */
+
+.mail-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+}
+.mail-tab{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    padding:7px 13px;
+    border-radius:999px;
+    cursor:pointer;
+}
+.mail-tab.is-active{ color:#fff; background:var(--navy); border-color:var(--navy); }
+
+.mail-panel{ display:none; }
+.mail-panel.is-active{ display:block; }
+
+.mail-item{
+    display:flex;
+    gap:10px;
+    padding:12px 4px;
+    border-bottom:1px dashed var(--paper-line);
+    font-size:13px;
+}
+.mail-item:last-child{ border-bottom:none; }
+.mail-item .icon{ font-size:17px; flex-shrink:0; }
+.mail-item .body{ flex:1; }
+.mail-item .title{ font-weight:700; margin-bottom:3px; }
+.mail-item .text{ color:var(--ink-soft); line-height:1.6; white-space:pre-wrap; }
+.mail-item .date{ color:var(--ink-soft); font-size:11px; margin-top:4px; }
+.mail-empty{ font-size:12.5px; color:var(--ink-soft); text-align:center; padding:18px 0; }
 </style>
 </head>
 
@@ -675,6 +889,78 @@ footer{
     <p>© 2026 Quiz Master — 今日も一歩、合格へ。</p>
 </footer>
 
+<button class="fab fab-contact" id="contactBtn" title="お問い合わせ">
+    <span class="fab-icon">💬</span><span class="fab-label">お問い合わせ</span>
+</button>
+
+<button class="fab fab-mailbox" id="mailboxBtn" title="メールボックス" style="position:relative;">
+    <span class="fab-icon">📮</span><span class="fab-label">メールボックス</span>
+    <!-- 未読件数などを出す場合はここに .fab-badge を追加 -->
+</button>
+
+<!-- ===== お問い合わせモーダル ===== -->
+<div class="modal-overlay" id="contactOverlay" hidden>
+    <div class="modal-card modal-contact">
+        <button class="modal-close" id="contactCloseBtn" aria-label="閉じる">✕</button>
+        <div class="modal-head">
+            <span class="eyebrow">CONTACT</span>
+            <h2>お問い合わせ</h2>
+            <p>いただいた内容は運営だけが確認できます。送った内容はこのページで後から見返せます。</p>
+        </div>
+
+        <form id="contactForm">
+            <div class="form-row">
+                <label for="contactCategory">種類</label>
+                <select id="contactCategory">
+                    <option value="不具合報告">不具合報告</option>
+                    <option value="要望">要望</option>
+                    <option value="問題の誤り">問題の誤り（クイズ内容について）</option>
+                    <option value="その他">その他</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="contactMessage">内容</label>
+                <textarea id="contactMessage" placeholder="内容をできるだけ詳しく書いてください" maxlength="1000"></textarea>
+            </div>
+            <p class="form-msg" id="contactMsg"></p>
+            <button type="submit" class="btn-stamp" id="contactSubmitBtn">送信する</button>
+        </form>
+
+        <div class="history-title">これまでのお問い合わせ</div>
+        <ul class="history-list" id="contactHistory">
+            <li class="history-empty">読み込み中...</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ===== メールボックス（通知センター）モーダル ===== -->
+<div class="modal-overlay" id="mailboxOverlay" hidden>
+    <div class="modal-card modal-mailbox">
+        <button class="modal-close" id="mailboxCloseBtn" aria-label="閉じる">✕</button>
+        <div class="modal-head">
+            <span class="eyebrow">MAILBOX</span>
+            <h2>メールボックス</h2>
+            <p>お知らせ・お問い合わせの返信・イベントの状況をまとめて確認できます。</p>
+        </div>
+
+        <div class="mail-tabs">
+            <button class="mail-tab is-active" data-panel="panelAnnounce">📣 お知らせ</button>
+            <button class="mail-tab" data-panel="panelReply">💬 返信</button>
+            <button class="mail-tab" data-panel="panelEvent">🎉 イベント</button>
+        </div>
+
+        <div class="mail-panel is-active" id="panelAnnounce">
+            <div id="announceList"><p class="mail-empty">読み込み中...</p></div>
+        </div>
+        <div class="mail-panel" id="panelReply">
+            <div id="replyList"><p class="mail-empty">読み込み中...</p></div>
+        </div>
+        <div class="mail-panel" id="panelEvent">
+            <div id="eventList"><p class="mail-empty">読み込み中...</p></div>
+        </div>
+    </div>
+</div>
+
 <script>
     const revealEls = document.querySelectorAll('.reveal');
     const io = new IntersectionObserver((entries) => {
@@ -692,6 +978,7 @@ footer{
 <script src="supabase.js"></script>
 <script src="idle-logout.js"></script>
 <script src="toppage.js"></script>
+<script src="notify.js"></script>
 
 </body>
 </html>
