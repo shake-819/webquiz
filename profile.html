@@ -244,7 +244,7 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 .avatar-frame{
     position:relative;
     background:#fff;
-    padding:10px 10px 22px;
+    padding:6px;
     box-shadow:0 10px 22px var(--shadow);
     transform:rotate(-1.2deg);
 }
@@ -295,16 +295,16 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     position:absolute; inset:0;
     width:100%; height:100%;
     object-fit:cover;
-    transform:scale(1.3) translateY(10px);
+    transform:translateY(10px);
     animation:avlFloat 4s ease-in-out infinite;
     transform-origin:50% 65%;
     will-change:transform;
 }
 @keyframes avlFloat{
-    0%,100%{ transform:scale(1.3) translateY(10px) rotate(-0.6deg); }
-    25%{     transform:scale(1.3) translateY(5px)  rotate(0.4deg); }
-    50%{     transform:scale(1.3) translateY(8px)  rotate(-0.2deg); }
-    75%{     transform:scale(1.3) translateY(4px)  rotate(0.6deg); }
+    0%,100%{ transform:translateY(10px) rotate(-0.6deg); }
+    25%{     transform:translateY(5px)  rotate(0.4deg); }
+    50%{     transform:translateY(8px)  rotate(-0.2deg); }
+    75%{     transform:translateY(4px)  rotate(0.6deg); }
 }
 
 .avl-splash{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
@@ -324,7 +324,8 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 
 @media (prefers-reduced-motion: reduce){
-    .avl-front, .avl-shimmer, .avl-drop{ animation:none !important; }
+    .avl-front{ animation:none !important; transform:translateY(10px) !important; }
+    .avl-shimmer, .avl-drop{ animation:none !important; }
 }
 
 .avatar-edit{
