@@ -634,7 +634,7 @@ async function sendChat() {
 // ==========================
 // AIチャット機能
 // ==========================
-const GROQ_API_KEY = "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"; // ⚠️下の注意参照
+const GROQ_API_KEY = "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"; // ⚠️下の注意参照
 const AI_BOT_USER_ID = "d23c8281-7c28-4440-a335-a8c0d20c9442";
 const AI_BOT_NAME = "ちゃっとAI";
 
@@ -647,7 +647,7 @@ async function askAI(promptText, grade) {
                 "Authorization": `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: "gpt-oss-120b",
                 messages: [
                     { role: "system", content: "あなたはクイズアプリのクラスチャットにいる親切なAIアシスタントです。日本語で簡潔に答えてください。わからないことは必ず分からないと言ってください。" },
                     { role: "user", content: promptText }
