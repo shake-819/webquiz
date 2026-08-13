@@ -13,7 +13,8 @@
         localStorage.setItem(STORAGE_KEY, Date.now().toString());
     }
 
-    // 無操作時間をチェックし、超えていればログアウト
+    // 無操作時間をチェックし、超えていればログアウトする。
+    // 戻り値: ログアウトさせた場合はtrue、そうでなければfalse
     async function checkIdleTimeout() {
         const last = parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10);
         const now = Date.now();
@@ -22,7 +23,9 @@
             await supabaseClient.auth.signOut();
             localStorage.removeItem(STORAGE_KEY);
             location.href = "login.html";
+            return true;
         }
+        return false;
     }
 
     // ユーザー操作イベントで最終操作時刻を更新
@@ -30,9 +33,12 @@
         document.addEventListener(evt, updateLastActivity, { passive: true });
     });
 
-    // ページ読み込み時に一度チェック＆記録
-    updateLastActivity();
-    checkIdleTimeout();
+    // ページ読み込み時：まず無操作時間をチェックしてから、最終操作時刻を更新する
+    // （順序を逆にすると、チェック直前に「今」で上書きされてしまい、
+    //   何時間経っていても絶対にタイムアウト判定されなくなる）
+    checkIdleTimeout().then(loggedOut => {
+        if (!loggedOut) updateLastActivity();
+    });
 
     // 1時間おきに定期チェック（タブを開きっぱなしにしていても検知できるように）
     setInterval(checkIdleTimeout, 60 * 60 * 1000);
