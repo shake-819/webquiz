@@ -508,6 +508,15 @@ function renderScoreEntryList(rows) {
     });
 }
 
+// メッセージ表示（毎回アニメーションし直すため、一度クラスを外してから付け直す）
+function showScoreMsg(msg, text, type) {
+    msg.textContent = text;
+    msg.className = "form-msg";
+    // 強制リフローでアニメーションをリスタートさせる
+    void msg.offsetWidth;
+    msg.classList.add(type, "is-visible");
+}
+
 function initTestScoreForm() {
     const btn = document.getElementById("scoreAddBtn");
     if (!btn) return; // Free会員の場合はセクションごと削除済み
@@ -523,44 +532,53 @@ function initTestScoreForm() {
         const score = Number(valueInput.value);
 
         if (!subject) {
-            msg.textContent = "教科名を入力してください";
-            msg.className = "form-msg err";
+            showScoreMsg(msg, "⚠️ 教科名を入力してください", "err");
             return;
         }
         if (valueInput.value === "" || Number.isNaN(score) || score < 0 || score > 100) {
-            msg.textContent = "点数は0〜100の数字で入力してください";
-            msg.className = "form-msg err";
+            showScoreMsg(msg, "⚠️ 点数は0〜100の数字で入力してください", "err");
             return;
         }
-
-        const {
-            data: { user }
-        } = await supabaseClient.auth.getUser();
-        if (!user) return;
 
         btn.disabled = true;
         btn.textContent = "追加中...";
 
-        const { error } = await supabaseClient
-            .from("test_scores")
-            .insert({ user_id: user.id, subject, term, score });
+        try {
+            const {
+                data: { user },
+                error: authError
+            } = await supabaseClient.auth.getUser();
 
-        btn.disabled = false;
-        btn.textContent = "追加";
+            // 以前はここでユーザーが取得できないと何も表示せず処理が止まっていた。
+            // 必ず結果（成功 or エラー）をユーザーに伝えるようにする。
+            if (authError || !user) {
+                console.error(authError);
+                showScoreMsg(msg, "⚠️ ログイン状態を確認できませんでした。ページを再読み込みしてから、もう一度お試しください。", "err");
+                return;
+            }
 
-        if (error) {
-            console.error(error);
-            msg.textContent = "追加に失敗しました。時間をおいて再度お試しください。";
-            msg.className = "form-msg err";
-            return;
+            const { error } = await supabaseClient
+                .from("test_scores")
+                .insert({ user_id: user.id, subject, term, score });
+
+            if (error) {
+                console.error(error);
+                showScoreMsg(msg, "⚠️ 追加に失敗しました。時間をおいて再度お試しください。", "err");
+                return;
+            }
+
+            showScoreMsg(msg, "✅ 追加しました", "ok");
+            subjectInput.value = "";
+            valueInput.value = "";
+
+            loadTestScoreChart();
+        } catch (e) {
+            console.error(e);
+            showScoreMsg(msg, "⚠️ エラーが発生しました。時間をおいて再度お試しください。", "err");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "追加";
         }
-
-        msg.textContent = "追加しました";
-        msg.className = "form-msg ok";
-        subjectInput.value = "";
-        valueInput.value = "";
-
-        loadTestScoreChart();
     });
 }
 
