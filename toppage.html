@@ -724,10 +724,12 @@ footer{
 
 /* --- メールボックス（通知センター） --- */
 
+.modal-mailbox{ max-width:540px; }
+
 .mail-tabs{
     display:flex;
     gap:6px;
-    margin-bottom:16px;
+    margin-bottom:6px;
     flex-wrap:wrap;
 }
 .mail-tab{
@@ -746,20 +748,119 @@ footer{
 .mail-panel{ display:none; }
 .mail-panel.is-active{ display:block; }
 
-.mail-item{
+/* 受信箱の一覧行 */
+.mail-row{
+    width:100%;
     display:flex;
-    gap:10px;
-    padding:12px 4px;
-    border-bottom:1px dashed var(--paper-line);
-    font-size:13px;
+    align-items:flex-start;
+    gap:11px;
+    padding:12px 8px 12px 16px;
+    background:none;
+    border:none;
+    border-bottom:1px solid var(--paper-line);
+    text-align:left;
+    cursor:pointer;
+    position:relative;
+    font-family:inherit;
+    color:inherit;
 }
-.mail-item:last-child{ border-bottom:none; }
-.mail-item .icon{ font-size:17px; flex-shrink:0; }
-.mail-item .body{ flex:1; }
-.mail-item .title{ font-weight:700; margin-bottom:3px; }
-.mail-item .text{ color:var(--ink-soft); line-height:1.6; white-space:pre-wrap; }
-.mail-item .date{ color:var(--ink-soft); font-size:11px; margin-top:4px; }
-.mail-empty{ font-size:12.5px; color:var(--ink-soft); text-align:center; padding:18px 0; }
+.mail-panel > div > .mail-row:last-child{ border-bottom:none; }
+.mail-row:hover{ background:var(--paper); }
+.mail-row:focus-visible{ outline:2px solid var(--navy); outline-offset:-2px; }
+
+.mail-row.is-unread::before{
+    content:"";
+    position:absolute;
+    left:3px; top:50%;
+    transform:translateY(-50%);
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--red-pen);
+}
+
+.mail-avatar{
+    width:36px; height:36px;
+    border-radius:50%;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:15px;
+    color:#fff;
+    background:var(--ink-soft);
+}
+.mail-avatar.is-announce{ background:var(--navy); }
+.mail-avatar.is-reply{ background:var(--sage); }
+.mail-avatar.is-event{ background:var(--gold); }
+
+.mail-row-main{ flex:1; min-width:0; }
+.mail-row-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+}
+.mail-row-subject{
+    font-size:13.5px;
+    font-weight:400;
+    color:var(--ink);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.mail-row.is-unread .mail-row-subject{ font-weight:700; }
+.mail-row-date{
+    font-size:11px;
+    color:var(--ink-soft);
+    flex-shrink:0;
+    white-space:nowrap;
+}
+.mail-row-snippet{
+    display:block;
+    margin-top:2px;
+    font-size:12px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.mail-row.is-unread .mail-row-snippet{ color:var(--ink); }
+
+/* 詳細ビュー */
+.mail-detail-back{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--navy);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:4px 0 16px;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+}
+.mail-detail-back:hover{ text-decoration:underline; }
+
+.mail-detail-head{
+    display:flex;
+    align-items:center;
+    gap:13px;
+    padding-bottom:16px;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--paper-line);
+}
+.mail-detail-title{ font-weight:700; font-size:15px; margin-bottom:4px; line-height:1.4; }
+.mail-detail-date{ font-size:11.5px; color:var(--ink-soft); }
+.mail-detail-body{
+    font-size:13.5px;
+    line-height:1.85;
+    white-space:pre-wrap;
+    color:var(--ink);
+    padding-bottom:6px;
+}
+
+.mail-empty{ font-size:12.5px; color:var(--ink-soft); text-align:center; padding:24px 0; }
 </style>
 </head>
 
@@ -895,7 +996,7 @@ footer{
 
 <button class="fab fab-mailbox" id="mailboxBtn" title="メールボックス">
     <span class="fab-icon">📮</span><span class="fab-label">メールボックス</span>
-    <!-- 未読件数などを出す場合はここに .fab-badge を追加 -->
+    <span class="fab-badge" id="mailboxBadge" hidden>0</span>
 </button>
 
 <!-- ===== お問い合わせモーダル ===== -->
@@ -937,26 +1038,41 @@ footer{
 <div class="modal-overlay" id="mailboxOverlay" hidden>
     <div class="modal-card modal-mailbox">
         <button class="modal-close" id="mailboxCloseBtn" aria-label="閉じる">✕</button>
-        <div class="modal-head">
-            <span class="eyebrow">MAILBOX</span>
-            <h2>メールボックス</h2>
-            <p>お知らせ・お問い合わせの返信・イベントの状況をまとめて確認できます。</p>
+
+        <div class="mail-list-view" id="mailListView">
+            <div class="modal-head">
+                <span class="eyebrow">MAILBOX</span>
+                <h2>メールボックス</h2>
+                <p>お知らせ・お問い合わせの返信・イベントの状況をまとめて確認できます。</p>
+            </div>
+
+            <div class="mail-tabs">
+                <button class="mail-tab is-active" data-panel="panelAnnounce">📣 お知らせ</button>
+                <button class="mail-tab" data-panel="panelReply">💬 返信</button>
+                <button class="mail-tab" data-panel="panelEvent">🎉 イベント</button>
+            </div>
+
+            <div class="mail-panel is-active" id="panelAnnounce">
+                <div id="announceList"><p class="mail-empty">読み込み中...</p></div>
+            </div>
+            <div class="mail-panel" id="panelReply">
+                <div id="replyList"><p class="mail-empty">読み込み中...</p></div>
+            </div>
+            <div class="mail-panel" id="panelEvent">
+                <div id="eventList"><p class="mail-empty">読み込み中...</p></div>
+            </div>
         </div>
 
-        <div class="mail-tabs">
-            <button class="mail-tab is-active" data-panel="panelAnnounce">📣 お知らせ</button>
-            <button class="mail-tab" data-panel="panelReply">💬 返信</button>
-            <button class="mail-tab" data-panel="panelEvent">🎉 イベント</button>
-        </div>
-
-        <div class="mail-panel is-active" id="panelAnnounce">
-            <div id="announceList"><p class="mail-empty">読み込み中...</p></div>
-        </div>
-        <div class="mail-panel" id="panelReply">
-            <div id="replyList"><p class="mail-empty">読み込み中...</p></div>
-        </div>
-        <div class="mail-panel" id="panelEvent">
-            <div id="eventList"><p class="mail-empty">読み込み中...</p></div>
+        <div class="mail-detail" id="mailDetail" hidden>
+            <button class="mail-detail-back" id="mailDetailBack">← 一覧に戻る</button>
+            <div class="mail-detail-head">
+                <span class="mail-avatar" id="mailDetailIcon"></span>
+                <div>
+                    <div class="mail-detail-title" id="mailDetailTitle"></div>
+                    <div class="mail-detail-date" id="mailDetailDate"></div>
+                </div>
+            </div>
+            <div class="mail-detail-body" id="mailDetailBody"></div>
         </div>
     </div>
 </div>
