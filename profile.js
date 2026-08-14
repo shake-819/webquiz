@@ -1,47 +1,3 @@
-// ==========================
-// プロフィールページ
-// ・自分のプロフィール: 画像/コメント選択・編集（Premium限定）
-// ・他ユーザーのプロフィール: ?user=<uuid> で閲覧（読み取り専用）
-// ・コレクション欄: イベントで入手予定のアイテム表示（現状はロック表示）
-// ・下部の統計（総回答数・正答率）は誰でも閲覧可能
-//
-// ▼ 画像は GitHub 上にアップロードした画像を参照します。
-//   （実運用時は GITHUB_ASSETS_BASE 以下に画像を置いてください）
-//
-// ▼「この人しか使えない」画像にしたい場合
-//   各プリセットに exclusiveTo: ["ユーザーのUUID", ...] を追加してください。
-//   ・exclusiveTo が無い（または空配列）→ Premiumユーザーなら誰でも選択可
-//   ・exclusiveTo がある            → そこに書かれたユーザーIDだけが選択・表示可
-//   ユーザーIDはSupabaseの Authentication > Users か、
-//   `select id from users where name = '...'` で確認できます。
-//
-//   ⚠️ 注意: これはあくまで「UI上」の制限です。ブラウザの開発者ツールから
-//   直接 supabase の update を呼べば理論上は誰でも書き込めてしまうため、
-//   本気で不正防止したい場合は Supabase 側（DB関数 / RLS）でも
-//   同様のチェックを行うことをおすすめします。
-//
-// ▼「浮く・波打つ・水しぶき」の本格演出を付けたいアバターの作り方
-//   1. 元画像から、キャラだけを透過PNGで切り抜く（背景除去ツール。
-//      rembgというツールを使う場合の例:
-//        pip install rembg onnxruntime
-//        python3 -c "from rembg import remove;
-//                     open('front.png','wb').write(remove(open('元画像.png','rb').read()))"
-//      ツールを入れたくない場合は remove.bg などのWebサービスでもOK。
-//   2. 切り抜いた透過PNG（front）と、元の背景ごとの画像（back）の
-//      2枚をどちらも assets/avatars/ に置く。
-//   3. プリセットに url の代わりに layered:{front, back} を書く（下の例）。
-//      front/backの両方を指定したアバターだけ、自動でこの演出になります。
-//      url だけのアバターは今までどおりの静止画のままです。
-//
-// ▼ 切り抜き位置の調整
-//   丸い/四角いアバター枠は object-fit:cover で画像を敷き詰めているので、
-//   何も指定しないと画像の「真ん中」を基準に上下左右が均等に切り取られます。
-//   人物が上寄り・下寄りの画像だと不自然に切れることがあるので、
-//   プリセットごとに focus: "横% 縦%" で基準位置をずらせます。
-//   例) focus: "50% 30%" → 画像の上寄りを基準にする（下側が多く切れる）
-//       focus: "50% 70%" → 画像の下寄りを基準にする（上側が多く切れる＝もっと下を見せたい時）
-//   指定しなければ "50% 50%"（中央）になります。
-// ==========================
 
 const GITHUB_ASSETS_BASE =
     "https://raw.githubusercontent.com/shake-819/webquiz/main/assets";
@@ -160,6 +116,18 @@ function renderProfile() {
     renderAvatar(p.avatar_key);
     renderComment(p.comment);
     renderStats(p.correct ?? 0, p.wrong ?? 0);
+
+    renderAchievementWall(
+        document.getElementById("achievementWall"),
+        document.getElementById("achievementStars"),
+        document.getElementById("profileLevel"),
+        {
+            userId: viewedUserId,
+            isOwnProfile,
+            correct: p.correct ?? 0,
+            wrong: p.wrong ?? 0
+        }
+    );
 
     // 編集系UIは「自分のプロフィール」かつ「Premium」のときだけ表示
     const canEdit = isOwnProfile && viewerIsPremium;
