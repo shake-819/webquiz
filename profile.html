@@ -301,21 +301,23 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 
 .avl-front{
-    position:absolute; inset:0;
-    width:100%; height:100%;
+    position:absolute;
+    /* scale()で縮小するのではなく、最初から四方に10%の余白を持たせて
+       画像を配置する。動くのはこの余白の中だけなので、
+       上下左右どこにはみ出しても overflow:hidden で切れることがない。 */
+    inset:10%;
+    width:80%; height:80%;
     object-fit:contain;
-    /* 浮遊アニメーションで下にずれても overflow:hidden で切れないよう、
-       あらかじめ少し縮小して動く分の余白を確保しておく */
-    transform:scale(0.92) translateY(10px);
+    transform:translateY(0);
     animation:avlFloat 4s ease-in-out infinite;
     transform-origin:50% 65%;
     will-change:transform;
 }
 @keyframes avlFloat{
-    0%,100%{ transform:scale(0.92) translateY(10px) rotate(-0.6deg); }
-    25%{     transform:scale(0.92) translateY(5px)  rotate(0.4deg); }
-    50%{     transform:scale(0.92) translateY(8px)  rotate(-0.2deg); }
-    75%{     transform:scale(0.92) translateY(4px)  rotate(0.6deg); }
+    0%,100%{ transform:translateY(0px)   rotate(-0.6deg); }
+    25%{     transform:translateY(-3px)  rotate(0.4deg); }
+    50%{     transform:translateY(-1.5px) rotate(-0.2deg); }
+    75%{     transform:translateY(-4px)  rotate(0.6deg); }
 }
 
 .avl-splash{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
@@ -335,7 +337,7 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 
 @media (prefers-reduced-motion: reduce){
-    .avl-front{ animation:none !important; transform:scale(0.92) translateY(10px) !important; }
+    .avl-front{ animation:none !important; transform:translateY(0) !important; }
     .avl-shimmer, .avl-drop{ animation:none !important; }
 }
 
