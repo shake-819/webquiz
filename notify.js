@@ -1,4 +1,3 @@
-
 let myId = null;
 
 document.addEventListener("DOMContentLoaded", init);
@@ -113,7 +112,34 @@ async function loadContactHistory() {
 
 // ==========================
 // メールボックス（総合通知センター）
+// ・お知らせ/返信/イベントを「一覧→タップで詳細」という
+//   実際のメールアプリに近いUIで表示する。
+// ・未読管理はDBに書き込まず、localStorageで端末ごとに保持する
+//   （key: mailboxRead_<userId>、値: 既読にしたアイテムのkey配列）
 // ==========================
+
+// タブごとに直近取得したアイテムをここに保持しておく（詳細ビュー表示・既読反映に使う）
+let mailItemsByKey = {};
+
+function readStorageKey() {
+    return `mailboxRead_${myId}`;
+}
+
+function getReadSet() {
+    try {
+        const raw = localStorage.getItem(readStorageKey());
+        return new Set(raw ? JSON.parse(raw) : []);
+    } catch {
+        return new Set();
+    }
+}
+
+function markAsRead(key) {
+    const set = getReadSet();
+    if (set.has(key)) return;
+    set.add(key);
+    localStorage.setItem(readStorageKey(), JSON.stringify([...set]));
+}
 
 function bindMailboxModal() {
     const overlay = document.getElementById("mailboxOverlay");
@@ -122,6 +148,7 @@ function bindMailboxModal() {
 
     openBtn.addEventListener("click", () => {
         overlay.hidden = false;
+        closeMailDetail();
         loadAnnouncements();
         loadReplies();
         loadEventStatus();
@@ -139,6 +166,85 @@ function bindMailboxModal() {
             document.getElementById(tab.dataset.panel).classList.add("is-active");
         });
     });
+
+    document.getElementById("mailDetailBack").addEventListener("click", closeMailDetail);
+
+    // 起動時にも未読バッジだけ静かに更新しておく
+    refreshUnreadBadge();
+}
+
+// 一覧の1行分のHTMLを組み立てる
+function renderMailRow(item) {
+    const readSet = getReadSet();
+    const unread = item.trackRead && !readSet.has(item.key);
+    return `
+        <button type="button" class="mail-row ${unread ? "is-unread" : ""}" data-key="${item.key}">
+            <span class="mail-avatar is-${item.type}">${item.icon}</span>
+            <span class="mail-row-main">
+                <span class="mail-row-top">
+                    <span class="mail-row-subject">${escapeHtml(item.title)}</span>
+                    <span class="mail-row-date">${item.shortDate}</span>
+                </span>
+                <span class="mail-row-snippet">${escapeHtml(item.snippet)}</span>
+            </span>
+        </button>
+    `;
+}
+
+// リスト描画＋行クリックで詳細ビューを開くイベントを設定する
+function renderMailList(containerEl, items) {
+    if (items.length === 0) {
+        containerEl.innerHTML = `<p class="mail-empty">まだありません</p>`;
+        return;
+    }
+
+    items.forEach(item => { mailItemsByKey[item.key] = item; });
+
+    containerEl.innerHTML = items.map(renderMailRow).join("");
+
+    containerEl.querySelectorAll(".mail-row").forEach(row => {
+        row.addEventListener("click", () => openMailDetail(row.dataset.key));
+    });
+}
+
+function openMailDetail(key) {
+    const item = mailItemsByKey[key];
+    if (!item) return;
+
+    if (item.trackRead) {
+        markAsRead(key);
+        refreshUnreadBadge();
+        // 一覧に戻った時に既読表示になるよう、対応する行の見た目も更新
+        document.querySelectorAll(`.mail-row[data-key="${key}"]`).forEach(row => {
+            row.classList.remove("is-unread");
+        });
+    }
+
+    document.getElementById("mailDetailIcon").textContent = item.icon;
+    document.getElementById("mailDetailIcon").className = `mail-avatar is-${item.type}`;
+    document.getElementById("mailDetailTitle").textContent = item.title;
+    document.getElementById("mailDetailDate").textContent = item.fullDate;
+    document.getElementById("mailDetailBody").textContent = item.body;
+
+    document.getElementById("mailListView").hidden = true;
+    document.getElementById("mailDetail").hidden = false;
+}
+
+function closeMailDetail() {
+    document.getElementById("mailDetail").hidden = true;
+    document.getElementById("mailListView").hidden = false;
+}
+
+// 一覧用の短い日付（例: 8/14）と、詳細用のフル日付を両方作る
+function shortDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function makeSnippet(text) {
+    const flat = String(text).replace(/\s+/g, " ").trim();
+    return flat.length > 34 ? flat.slice(0, 34) + "…" : flat;
 }
 
 async function loadAnnouncements() {
@@ -146,7 +252,7 @@ async function loadAnnouncements() {
 
     const { data, error } = await supabaseClient
         .from("announcements")
-        .select("title,body,created_at")
+        .select("id,title,body,created_at")
         .order("created_at", { ascending: false })
         .limit(20);
 
@@ -156,21 +262,19 @@ async function loadAnnouncements() {
         return;
     }
 
-    if (!data || data.length === 0) {
-        el.innerHTML = `<p class="mail-empty">お知らせはまだありません</p>`;
-        return;
-    }
+    const items = (data || []).map(a => ({
+        key: `announce:${a.id}`,
+        type: "announce",
+        icon: "📣",
+        title: a.title,
+        snippet: makeSnippet(a.body),
+        body: a.body,
+        shortDate: shortDate(a.created_at),
+        fullDate: formatDate(a.created_at),
+        trackRead: true
+    }));
 
-    el.innerHTML = data.map(a => `
-        <div class="mail-item">
-            <span class="icon">📣</span>
-            <div class="body">
-                <div class="title">${escapeHtml(a.title)}</div>
-                <div class="text">${escapeHtml(a.body)}</div>
-                <div class="date">${formatDate(a.created_at)}</div>
-            </div>
-        </div>
-    `).join("");
+    renderMailList(el, items);
 }
 
 async function loadReplies() {
@@ -178,7 +282,7 @@ async function loadReplies() {
 
     const { data, error } = await supabaseClient
         .from("inquiries")
-        .select("category,message,admin_reply,replied_at")
+        .select("id,category,message,admin_reply,replied_at")
         .eq("user_id", myId)
         .not("admin_reply", "is", null)
         .order("replied_at", { ascending: false })
@@ -190,24 +294,23 @@ async function loadReplies() {
         return;
     }
 
-    if (!data || data.length === 0) {
-        el.innerHTML = `<p class="mail-empty">お問い合わせへの返信はまだありません</p>`;
-        return;
-    }
+    const items = (data || []).map(r => ({
+        key: `reply:${r.id}`,
+        type: "reply",
+        icon: "💬",
+        title: `【${r.category}】へのお問い合わせ`,
+        snippet: makeSnippet(r.admin_reply),
+        body: r.admin_reply,
+        shortDate: shortDate(r.replied_at),
+        fullDate: formatDate(r.replied_at),
+        trackRead: true
+    }));
 
-    el.innerHTML = data.map(r => `
-        <div class="mail-item">
-            <span class="icon">💬</span>
-            <div class="body">
-                <div class="title">【${r.category}】へのお問い合わせ</div>
-                <div class="text">${escapeHtml(r.admin_reply)}</div>
-                <div class="date">${formatDate(r.replied_at)}</div>
-            </div>
-        </div>
-    `).join("");
+    renderMailList(el, items);
 }
 
 // イベントの「通知」はDBに保存せず、開いた時点の最新状況をその場で集計して見せる
+// （その場限りのスナップショットなので未読/既読の概念は持たせない）
 async function loadEventStatus() {
     const el = document.getElementById("eventList");
     el.innerHTML = `<p class="mail-empty">読み込み中...</p>`;
@@ -223,9 +326,14 @@ async function loadEventStatus() {
 
     if (ta) {
         items.push({
+            key: "event:timeattack",
+            type: "event",
             icon: "⏱️",
             title: "タイムアタッククイズ",
-            text: `自己ベスト ${ta.best_score}問正解${ta.best_score >= 15 ? "（限定アバター解放済み🎁）" : ""}`
+            body: `自己ベスト ${ta.best_score}問正解${ta.best_score >= 15 ? "（限定アバター解放済み🎁）" : ""}`,
+            shortDate: "",
+            fullDate: "現在の状況",
+            trackRead: false
         });
     }
 
@@ -238,26 +346,43 @@ async function loadEventStatus() {
 
     if (dice) {
         items.push({
+            key: "event:dice",
+            type: "event",
             icon: "🎲",
             title: "サイコロの旅",
-            text: `現在 ${dice.position}マス目（サイコロ使用: ${dice.dice_used}回）`
+            body: `現在 ${dice.position}マス目（サイコロ使用: ${dice.dice_used}回）`,
+            shortDate: "",
+            fullDate: "現在の状況",
+            trackRead: false
         });
     }
 
-    if (items.length === 0) {
-        el.innerHTML = `<p class="mail-empty">まだイベントに参加していません</p>`;
-        return;
-    }
+    items.forEach(i => { i.snippet = makeSnippet(i.body); });
 
-    el.innerHTML = items.map(i => `
-        <div class="mail-item">
-            <span class="icon">${i.icon}</span>
-            <div class="body">
-                <div class="title">${i.title}</div>
-                <div class="text">${i.text}</div>
-            </div>
-        </div>
-    `).join("");
+    renderMailList(el, items);
+}
+
+// お知らせ・返信の未読件数を合算してFABのバッジに反映する
+async function refreshUnreadBadge() {
+    const badge = document.getElementById("mailboxBadge");
+    if (!badge) return;
+
+    const [{ data: announces }, { data: replies }] = await Promise.all([
+        supabaseClient.from("announcements").select("id").order("created_at", { ascending: false }).limit(20),
+        supabaseClient.from("inquiries").select("id").eq("user_id", myId).not("admin_reply", "is", null).order("replied_at", { ascending: false }).limit(20)
+    ]);
+
+    const readSet = getReadSet();
+    const unreadCount =
+        (announces || []).filter(a => !readSet.has(`announce:${a.id}`)).length +
+        (replies || []).filter(r => !readSet.has(`reply:${r.id}`)).length;
+
+    if (unreadCount > 0) {
+        badge.hidden = false;
+        badge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
+    } else {
+        badge.hidden = true;
+    }
 }
 
 // ==========================
