@@ -40,6 +40,29 @@
             <canvas id="dailyChart"></canvas>
         </div>
 
+        <h2 class="page-title">📝 テストの点数記録</h2>
+        <div id="testScoreSection">
+            <div class="chart-box">
+                <canvas id="testScoreChart"></canvas>
+            </div>
+            <div class="score-form">
+                <div class="score-form-row">
+                    <input type="text" id="scoreSubject" placeholder="教科名（例: 数学）" maxlength="20">
+                    <input type="number" id="scoreValue" placeholder="点数" min="0" max="100">
+                    <select id="scoreTerm">
+                        <option value="1学期中間">1学期中間</option>
+                        <option value="1学期末">1学期末</option>
+                        <option value="2学期中間">2学期中間</option>
+                        <option value="2学期末">2学期末</option>
+                        <option value="学年末">学年末</option>
+                    </select>
+                    <button id="scoreAddBtn">追加</button>
+                </div>
+                <p class="form-msg" id="scoreFormMsg"></p>
+                <ul class="score-entry-list" id="scoreEntryList"></ul>
+            </div>
+        </div>
+
         <h2 class="page-title">⭐ ブックマーク一覧</h2>
         <div id="bookmarkContainer" class="bookmark-container">
             <p class="empty-message" id="bookmarkEmpty" style="display:none;">
