@@ -47,16 +47,25 @@
             </div>
             <div class="score-form">
                 <div class="score-form-row">
-                    <input type="text" id="scoreSubject" placeholder="教科名（例: 数学）" maxlength="20">
-                    <input type="number" id="scoreValue" placeholder="点数" min="0" max="100">
-                    <select id="scoreTerm">
-                        <option value="1学期中間">1学期中間</option>
-                        <option value="1学期末">1学期末</option>
-                        <option value="2学期中間">2学期中間</option>
-                        <option value="2学期末">2学期末</option>
-                        <option value="学年末">学年末</option>
-                    </select>
-                    <button id="scoreAddBtn">追加</button>
+                    <label class="score-field">
+                        <span class="score-field-label">教科</span>
+                        <input type="text" id="scoreSubject" placeholder="例: 数学" maxlength="20">
+                    </label>
+                    <label class="score-field score-field-narrow">
+                        <span class="score-field-label">点数</span>
+                        <input type="number" id="scoreValue" placeholder="0〜100" min="0" max="100">
+                    </label>
+                    <label class="score-field">
+                        <span class="score-field-label">区分</span>
+                        <select id="scoreTerm">
+                            <option value="1学期中間">1学期中間</option>
+                            <option value="1学期末">1学期末</option>
+                            <option value="2学期中間">2学期中間</option>
+                            <option value="2学期末">2学期末</option>
+                            <option value="学年末">学年末</option>
+                        </select>
+                    </label>
+                    <button id="scoreAddBtn">＋ 追加</button>
                 </div>
                 <p class="form-msg" id="scoreFormMsg"></p>
                 <ul class="score-entry-list" id="scoreEntryList"></ul>
