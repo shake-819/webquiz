@@ -204,7 +204,7 @@ async function loadDailyChart() {
                         borderColor: "rgb(59, 130, 246)",
                         backgroundColor: "rgba(59, 130, 246, 0.15)",
                         tension: 0,
-                        fill: true,
+                        fill: false,
                         pointRadius: 4
                     },
                     {
@@ -214,7 +214,7 @@ async function loadDailyChart() {
                         borderColor: "rgb(34, 197, 94)",
                         backgroundColor: "rgba(34, 197, 94, 0.15)",
                         tension: 0,
-                        fill: true,
+                        fill: false,
                         pointRadius: 4
                     }
                 ]
@@ -364,6 +364,208 @@ document.getElementById("homeBtn")
     .addEventListener("click", () => {
         location.href = "toppage.html";
     });
+
+// ==========================
+// テストの点数記録（折れ線グラフ／Premium限定）
+// ==========================
+const SCORE_TERMS = ["1学期中間", "1学期末", "2学期中間", "2学期末", "学年末"];
+
+let testScoreChartInstance = null;
+
+// 教科名から毎回同じ色を作る（登録順に依存せず安定させるため）
+function subjectColor(subject) {
+    let hash = 0;
+    for (let i = 0; i < subject.length; i++) {
+        hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 48%)`;
+}
+
+function escapeHtmlScore(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+async function loadTestScoreChart() {
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: profile, error: profileError } = await supabaseClient
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+
+    if (profileError) {
+        console.error(profileError);
+        return;
+    }
+
+    // Premium以外は非表示
+    if (profile.plan !== "premium") {
+        document.getElementById("testScoreSection")?.remove();
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("test_scores")
+        .select("id,subject,term,score,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    renderScoreEntryList(data || []);
+
+    // 教科ごとに { 区分: 点数 } を作る
+    const bySubject = {};
+    (data || []).forEach(row => {
+        if (!bySubject[row.subject]) bySubject[row.subject] = {};
+        bySubject[row.subject][row.term] = row.score;
+    });
+
+    const datasets = Object.keys(bySubject).map(subject => {
+        const color = subjectColor(subject);
+        return {
+            label: subject,
+            data: SCORE_TERMS.map(term => bySubject[subject][term] ?? null),
+            borderColor: color,
+            backgroundColor: color,
+            spanGaps: true, // 未入力の区分があってもそこだけ線をつなげて飛ばす
+            tension: 0,
+            pointRadius: 4
+        };
+    });
+
+    if (testScoreChartInstance) {
+        testScoreChartInstance.destroy();
+    }
+
+    testScoreChartInstance = new Chart(
+        document.getElementById("testScoreChart"),
+        {
+            type: "line",
+            data: {
+                labels: SCORE_TERMS,
+                datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: "点数" }
+                    }
+                }
+            }
+        }
+    );
+}
+
+function renderScoreEntryList(rows) {
+    const list = document.getElementById("scoreEntryList");
+    if (!list) return;
+
+    if (rows.length === 0) {
+        list.innerHTML = `<li class="score-entry-empty">まだ記録がありません</li>`;
+        return;
+    }
+
+    list.innerHTML = rows.map(row => `
+        <li class="score-entry" data-id="${row.id}">
+            <span class="score-entry-subject">${escapeHtmlScore(row.subject)}</span>
+            <span class="score-entry-term">${escapeHtmlScore(row.term)}</span>
+            <span class="score-entry-score">${row.score}点</span>
+            <button class="score-entry-remove" data-id="${row.id}" title="削除">✕</button>
+        </li>
+    `).join("");
+
+    list.querySelectorAll(".score-entry-remove").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const { error } = await supabaseClient
+                .from("test_scores")
+                .delete()
+                .eq("id", btn.dataset.id);
+
+            if (error) {
+                console.error(error);
+                alert("削除に失敗しました。時間をおいて再度お試しください。");
+                return;
+            }
+
+            loadTestScoreChart();
+        });
+    });
+}
+
+function initTestScoreForm() {
+    const btn = document.getElementById("scoreAddBtn");
+    if (!btn) return; // Free会員の場合はセクションごと削除済み
+
+    btn.addEventListener("click", async () => {
+        const subjectInput = document.getElementById("scoreSubject");
+        const valueInput = document.getElementById("scoreValue");
+        const termSelect = document.getElementById("scoreTerm");
+        const msg = document.getElementById("scoreFormMsg");
+
+        const subject = subjectInput.value.trim();
+        const term = termSelect.value;
+        const score = Number(valueInput.value);
+
+        if (!subject) {
+            msg.textContent = "教科名を入力してください";
+            msg.className = "form-msg err";
+            return;
+        }
+        if (valueInput.value === "" || Number.isNaN(score) || score < 0 || score > 100) {
+            msg.textContent = "点数は0〜100の数字で入力してください";
+            msg.className = "form-msg err";
+            return;
+        }
+
+        const {
+            data: { user }
+        } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        btn.disabled = true;
+        btn.textContent = "追加中...";
+
+        const { error } = await supabaseClient
+            .from("test_scores")
+            .insert({ user_id: user.id, subject, term, score });
+
+        btn.disabled = false;
+        btn.textContent = "追加";
+
+        if (error) {
+            console.error(error);
+            msg.textContent = "追加に失敗しました。時間をおいて再度お試しください。";
+            msg.className = "form-msg err";
+            return;
+        }
+
+        msg.textContent = "追加しました";
+        msg.className = "form-msg ok";
+        subjectInput.value = "";
+        valueInput.value = "";
+
+        loadTestScoreChart();
+    });
+}
+
+initTestScoreForm();
+loadTestScoreChart();
 
 // ==========================
 // 記録リセット機能（Premium限定）
