@@ -1,4 +1,3 @@
-
 const GITHUB_ASSETS_BASE =
     "https://raw.githubusercontent.com/shake-819/webquiz/main/assets";
 
@@ -165,6 +164,7 @@ function renderAvatar(avatarKey) {
             <div class="avl">
                 <div class="avl-wave">
                     <img src="${preset.layered.back}" alt=""
+                         style="object-position:${focus}"
                          onerror="this.parentElement.style.display='none'">
                 </div>
                 <div class="avl-shimmer"></div>
