@@ -219,63 +219,116 @@ body {
 /* ===== テストの点数記録 ===== */
 .score-form {
     background: rgba(255,255,255,0.6);
-    border-radius: 8px;
-    padding: 14px 16px;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: inset 0 0 0 1px rgba(217,201,160,0.35);
 }
 .score-form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.4fr auto;
+    align-items: end;
+    gap: 12px;
+}
+.score-field {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.score-field-narrow { min-width: 0; }
+.score-field-label {
+    font-size: 12px;
+    color: #8a7c63;
+    padding-left: 2px;
 }
 .score-form-row input,
 .score-form-row select {
     font-family: 'Zen Kurenaido', sans-serif;
-    font-size: 14px;
-    padding: 8px 10px;
+    font-size: 14.5px;
+    padding: 9px 12px;
     border: 1px solid #d9c9a0;
-    border-radius: 6px;
+    border-radius: 8px;
     background: #fffdf7;
     color: #4a4237;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
-#scoreSubject { flex: 2; min-width: 120px; }
-#scoreValue { flex: 1; min-width: 70px; }
-#scoreTerm { flex: 1.5; min-width: 130px; }
+.score-form-row input:focus,
+.score-form-row select:focus {
+    outline: none;
+    border-color: #b3925b;
+    box-shadow: 0 0 0 3px rgba(179,146,91,0.18);
+}
 .score-form-row button {
     font-family: 'Zen Kurenaido', sans-serif;
-    font-size: 14px;
-    padding: 8px 16px;
+    font-size: 14.5px;
+    font-weight: 700;
+    padding: 10px 20px;
+    height: 40px;
     background: #5b4636;
     color: #fffdf7;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, transform 0.1s;
 }
 .score-form-row button:hover {
     background: #473627;
 }
+.score-form-row button:active {
+    transform: scale(0.97);
+}
 .score-form-row button:disabled {
     opacity: 0.6;
     cursor: default;
+    transform: none;
 }
 .form-msg {
-    font-size: 13px;
-    margin: 8px 0 0;
-    min-height: 1em;
+    font-size: 13.5px;
+    margin: 0;
+    min-height: 0;
+    max-height: 0;
+    padding: 0 12px;
+    border-radius: 8px;
+    opacity: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease, max-height 0.2s ease, margin 0.2s ease, padding 0.2s ease;
 }
-.form-msg.ok { color: #2f7a3f; }
-.form-msg.err { color: #a33; }
+.form-msg.is-visible {
+    margin: 10px 0 0;
+    max-height: 40px;
+    padding: 8px 12px;
+    opacity: 1;
+}
+.form-msg.ok {
+    color: #2f7a3f;
+    background: #eaf6ec;
+    border: 1px solid #bfe3c6;
+}
+.form-msg.err {
+    color: #a33;
+    background: #fdf0ef;
+    border: 1px solid #e8c3c1;
+}
 
 .score-entry-list {
     list-style: none;
-    margin: 10px 0 0;
+    margin: 14px 0 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 .score-entry {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 4px;
-    border-top: 1px dashed #e8e1cd;
+    padding: 8px 12px;
+    background: #fffdf7;
+    border: 1px solid #ece4cf;
+    border-radius: 8px;
     font-size: 13.5px;
     color: #3f382c;
 }
@@ -289,20 +342,36 @@ body {
 }
 .score-entry-score {
     font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: #5b4636;
 }
 .score-entry-remove {
     flex-shrink: 0;
     cursor: pointer;
     color: #b98a8a;
-    font-size: 13px;
+    font-size: 14px;
     border: none;
     background: none;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
 }
 .score-entry-remove:hover {
     color: #a33;
+    background: #fdf0ef;
 }
 .score-entry-empty {
     color: #999;
     font-style: italic;
     padding: 8px 4px;
+}
+
+@media (max-width: 560px) {
+    .score-form-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .score-form-row button {
+        grid-column: 1 / -1;
+    }
 }
