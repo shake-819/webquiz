@@ -15,9 +15,6 @@ const AVATAR_PRESETS = [
         url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.jpg`,
         exclusiveTo: ["ここにユーザーUUID"] },
 
-    // ↓ 「浮く・波打つ・水しぶき」の本格演出付きアバターの例。
-    // front(キャラの透過PNG) と back(背景) を両方指定すると自動でこの演出になる。
-    // focus で切り抜き位置も調整できる（下寄りを見せたいので縦70%に）。
     { key: "avatar_summer", name: "summer",
         layered: {
             front: `${GITHUB_ASSETS_BASE}/avatars/summer_front.png`,
@@ -27,14 +24,11 @@ const AVATAR_PRESETS = [
         zoom: 1.3, // 1.0=そのまま。値を上げるほど顔寄りにアップになる（0.1刻みで調整推奨）
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 
-    // ↓ 背景込みの1枚絵に「歩くような揺れ・花吹雪・文字送りキャプション」を
-    // 付ける演出の例。urlに1枚絵を指定し、effectsで演出を指定する。
-    // effects.text は行ごとに配列で渡す（1文字ずつ1秒間隔で表示される）。
     { key: "avatar_king", name: "王者",
         url: `${GITHUB_ASSETS_BASE}/avatars/avatar_king.jpg`,
         focus: "50% 20%",
         effects: { sway: true, petals: true, text: ["2学期中間", "王者"] },
-        exclusiveTo: ["ここにユーザーUUID"] },
+        exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 
 // ----- コレクションアイテム -----
