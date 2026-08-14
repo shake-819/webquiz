@@ -291,8 +291,15 @@ function openAvatarPicker() {
         btn.type = "button";
         btn.className = "picker-item";
         btn.title = preset.name || "";
-        btn.innerHTML = `<img src="${getPresetThumbnail(preset)}" alt="${preset.name || ""}"
-            style="object-position:${preset.focus || "50% 50%"}"
+
+        // layered（front/back演出）のサムネイルは front の透過PNGをそのまま使うため、
+        // object-fit:cover + focus位置 で切り抜くと絵の上側が見切れてしまう。
+        // 通常アバター（1枚の写真）は今まで通りcoverで、layeredのみcontainにして全体を見せる。
+        const thumbClass = preset.layered ? "thumb-contain" : "";
+        const thumbStyle = preset.layered ? "" : `object-position:${preset.focus || "50% 50%"}`;
+
+        btn.innerHTML = `<img class="${thumbClass}" src="${getPresetThumbnail(preset)}" alt="${preset.name || ""}"
+            style="${thumbStyle}"
             onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🙂'}))">`;
         btn.addEventListener("click", () => selectAvatar(preset.key));
         grid.appendChild(btn);
