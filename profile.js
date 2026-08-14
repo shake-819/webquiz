@@ -24,7 +24,17 @@ const AVATAR_PRESETS = [
             back:  `${GITHUB_ASSETS_BASE}/avatars/summer_back.png`
         },
         focus: "50% 70%",
+        zoom: 1.3, // 1.0=そのまま。値を上げるほど顔寄りにアップになる（0.1刻みで調整推奨）
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
+
+    // ↓ 背景込みの1枚絵に「歩くような揺れ・花吹雪・文字送りキャプション」を
+    // 付ける演出の例。urlに1枚絵を指定し、effectsで演出を指定する。
+    // effects.text は行ごとに配列で渡す（1文字ずつ1秒間隔で表示される）。
+    { key: "avatar_king", name: "王者",
+        url: `${GITHUB_ASSETS_BASE}/avatars/avatar_king.jpg`,
+        focus: "50% 20%",
+        effects: { sway: true, petals: true, text: ["2学期中間", "王者"] },
+        exclusiveTo: ["ここにユーザーUUID"] },
 ];
 
 // ----- コレクションアイテム -----
@@ -56,7 +66,7 @@ let viewedUserId = null;
 let isOwnProfile = false;
 let currentProfile = null; // 表示対象ユーザーの users 行
 let viewerIsPremium = false; // 自分自身がPremiumかどうか
-let avatarSplashTimer = null; // 本格演出アバターの水しぶき用タイマー
+let avatarEffectTimers = []; // 演出アバター（水しぶき・花吹雪・文字送りなど）のタイマー群
 
 const params = new URLSearchParams(location.search);
 
@@ -140,11 +150,9 @@ function renderProfile() {
 function renderAvatar(avatarKey) {
     const el = document.getElementById("avatarPhoto");
 
-    // アバターを切り替えるたびに、前の演出の水しぶきタイマーは必ず止める
-    if (avatarSplashTimer) {
-        clearInterval(avatarSplashTimer);
-        avatarSplashTimer = null;
-    }
+    // アバターを切り替えるたびに、前の演出タイマー（水しぶき・花吹雪・文字送りなど）は必ず止める
+    avatarEffectTimers.forEach(t => clearInterval(t));
+    avatarEffectTimers = [];
 
     // すでに設定済みのアバターは、その後に限定対象から外れても
     // 表示自体はそのまま維持する（「一度もらった称号は残る」的な挙動）
@@ -160,6 +168,7 @@ function renderAvatar(avatarKey) {
 
     if (preset.layered) {
         el.style.background = "#fff";
+        const zoom = preset.zoom || 1;
         el.innerHTML = `
             <div class="avl">
                 <div class="avl-wave">
@@ -169,12 +178,34 @@ function renderAvatar(avatarKey) {
                 </div>
                 <div class="avl-shimmer"></div>
                 <img class="avl-front" src="${preset.layered.front}" alt="プロフィール画像"
-                     style="object-position:${focus}"
+                     style="object-position:${focus}; --afzoom:${zoom}"
                      onerror="this.style.display='none'">
                 <div class="avl-splash"></div>
             </div>
         `;
-        avatarSplashTimer = startAvatarSplash(el.querySelector(".avl-splash"));
+        avatarEffectTimers.push(startAvatarSplash(el.querySelector(".avl-splash")));
+    } else if (preset.effects) {
+        el.style.background = "#fff";
+        const lines = preset.effects.text || [];
+        el.innerHTML = `
+            <div class="avk">
+                <img class="avk-img" src="${preset.url}" alt="プロフィール画像"
+                     style="object-position:${focus}"
+                     onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">
+                ${preset.effects.petals ? `<div class="avk-petals"></div>` : ""}
+                ${lines.length ? `<div class="avk-caption">
+                    ${lines.map(line => `<span class="avk-caption-line">${
+                        [...line].map(ch => `<span class="ch">${ch === " " ? "&nbsp;" : ch}</span>`).join("")
+                    }</span>`).join("")}
+                </div>` : ""}
+            </div>
+        `;
+        if (preset.effects.petals) {
+            avatarEffectTimers.push(startPetalStorm(el.querySelector(".avk-petals")));
+        }
+        if (lines.length) {
+            avatarEffectTimers.push(...startCaptionTyping(el.querySelectorAll(".avk-caption .ch")));
+        }
     } else {
         el.style.background = "#fff";
         el.innerHTML = `<img src="${preset.url}" alt="プロフィール画像"
@@ -201,6 +232,51 @@ function startAvatarSplash(layer) {
 
     for (let i = 0; i < 6; i++) setTimeout(spawnDrop, i * 90);
     return setInterval(spawnDrop, 220);
+}
+
+// 王者アバターの花吹雪を定期生成する
+function startPetalStorm(layer) {
+    if (!layer) return null;
+
+    function spawnPetal() {
+        const p = document.createElement("div");
+        p.className = "avk-petal";
+        p.style.left = Math.random() * 100 + "%";
+        p.style.setProperty("--avk-drift", (Math.random() * 60 - 30) + "px");
+        p.style.animationDuration = (2.6 + Math.random() * 1.8) + "s";
+        p.style.transform = `rotate(${Math.random() * 360}deg)`;
+        layer.appendChild(p);
+        setTimeout(() => p.remove(), 4600);
+    }
+
+    for (let i = 0; i < 5; i++) setTimeout(spawnPetal, i * 200);
+    return setInterval(spawnPetal, 420);
+}
+
+// 下部キャプションを1文字ずつ、1秒間隔で表示する（すべて表示後は少し待って最初からループ）
+function startCaptionTyping(chEls) {
+    const chars = Array.from(chEls);
+    if (chars.length === 0) return [];
+
+    let i = 0;
+    function reveal() {
+        chars.forEach(c => c.classList.remove("is-visible"));
+        i = 0;
+        const timer = setInterval(() => {
+            if (i < chars.length) {
+                chars[i].classList.add("is-visible");
+                i++;
+            } else {
+                clearInterval(timer);
+                // 全文字表示後、少し余韻を置いてから最初から表示し直す
+                const restartTimer = setTimeout(reveal, 2500);
+                avatarEffectTimers.push(restartTimer);
+            }
+        }, 1000);
+        avatarEffectTimers.push(timer);
+    }
+    reveal();
+    return [];
 }
 
 function renderComment(comment) {
