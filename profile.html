@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -311,16 +311,19 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     inset:10%;
     width:80%; height:80%;
     object-fit:contain;
-    transform:translateY(0);
+    transform:scale(var(--afzoom, 1)) translateY(0);
     animation:avlFloat 4s ease-in-out infinite;
-    transform-origin:50% 65%;
+    /* ズーム(--afzoom)する時はここが拡大の中心になる。
+       顔を残しつつアップにしたいので、縦位置は低め（65%）ではなく
+       やや上寄りにしてある。ここを0%に近づけるほど「顔基準」でアップになる。 */
+    transform-origin:50% 38%;
     will-change:transform;
 }
 @keyframes avlFloat{
-    0%,100%{ transform:translateY(0px)   rotate(-0.6deg); }
-    25%{     transform:translateY(-3px)  rotate(0.4deg); }
-    50%{     transform:translateY(-1.5px) rotate(-0.2deg); }
-    75%{     transform:translateY(-4px)  rotate(0.6deg); }
+    0%,100%{ transform:scale(var(--afzoom, 1)) translateY(0px)   rotate(-0.6deg); }
+    25%{     transform:scale(var(--afzoom, 1)) translateY(-3px)  rotate(0.4deg); }
+    50%{     transform:scale(var(--afzoom, 1)) translateY(-1.5px) rotate(-0.2deg); }
+    75%{     transform:scale(var(--afzoom, 1)) translateY(-4px)  rotate(0.6deg); }
 }
 
 .avl-splash{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
@@ -342,6 +345,74 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 @media (prefers-reduced-motion: reduce){
     .avl-front{ animation:none !important; transform:translateY(0) !important; }
     .avl-shimmer, .avl-drop{ animation:none !important; }
+}
+
+/* ===== 王者演出アバター（1枚絵＋揺れ・花吹雪・文字送り） ===== */
+
+.avk{ position:relative; width:100%; height:100%; overflow:hidden; }
+
+.avk-img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    /* 足元を軸に、歩いているような肩・上体の揺れを付ける */
+    transform-origin:50% 100%;
+    animation:avkSway 2.6s ease-in-out infinite;
+    will-change:transform;
+}
+@keyframes avkSway{
+    0%,100%{ transform:rotate(-1.4deg) translateX(-1px); }
+    25%{     transform:rotate(0.8deg)  translateX(1px); }
+    50%{     transform:rotate(-0.4deg) translateX(0); }
+    75%{     transform:rotate(1.4deg)  translateX(1px); }
+}
+
+/* 花吹雪 */
+.avk-petals{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.avk-petal{
+    position:absolute;
+    top:-8%;
+    width:8px; height:11px;
+    background:radial-gradient(circle at 30% 30%, #ffb3b3, #b3182f 75%);
+    border-radius:60% 40% 60% 40% / 60% 60% 40% 40%;
+    opacity:0;
+    animation:avkPetalFall linear infinite;
+}
+@keyframes avkPetalFall{
+    0%{   transform:translate(0, 0) rotate(0deg);   opacity:0; }
+    8%{   opacity:.95; }
+    85%{  opacity:.85; }
+    100%{ transform:translate(var(--avk-drift, 24px), 128%) rotate(340deg); opacity:0; }
+}
+
+/* 下部の文字送りキャプション（達筆フォント） */
+.avk-caption{
+    position:absolute;
+    left:0; right:0; bottom:6%;
+    text-align:center;
+    line-height:1.25;
+    pointer-events:none;
+    text-shadow:0 2px 6px rgba(0,0,0,.85), 0 0 14px rgba(0,0,0,.5);
+}
+.avk-caption-line{
+    display:block;
+    font-family:'Yuji Syuku', serif;
+    font-size:clamp(13px, 3.6vw, 19px);
+    letter-spacing:.12em;
+    color:#fff2d0;
+}
+.avk-caption .ch{
+    display:inline-block;
+    opacity:0;
+    transform:translateY(5px);
+    transition:opacity .5s ease, transform .5s ease;
+}
+.avk-caption .ch.is-visible{ opacity:1; transform:translateY(0); }
+
+@media (prefers-reduced-motion: reduce){
+    .avk-img{ animation:none !important; transform:none !important; }
+    .avk-petal{ animation:none !important; display:none !important; }
+    .avk-caption .ch{ transition:none !important; opacity:1 !important; transform:none !important; }
 }
 
 .avatar-edit{
