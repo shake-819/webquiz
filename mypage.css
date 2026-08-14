@@ -215,3 +215,94 @@ body {
     font-style: italic;
     padding: 10px 4px;
 }
+
+/* ===== テストの点数記録 ===== */
+.score-form {
+    background: rgba(255,255,255,0.6);
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+.score-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.score-form-row input,
+.score-form-row select {
+    font-family: 'Zen Kurenaido', sans-serif;
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid #d9c9a0;
+    border-radius: 6px;
+    background: #fffdf7;
+    color: #4a4237;
+}
+#scoreSubject { flex: 2; min-width: 120px; }
+#scoreValue { flex: 1; min-width: 70px; }
+#scoreTerm { flex: 1.5; min-width: 130px; }
+.score-form-row button {
+    font-family: 'Zen Kurenaido', sans-serif;
+    font-size: 14px;
+    padding: 8px 16px;
+    background: #5b4636;
+    color: #fffdf7;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.score-form-row button:hover {
+    background: #473627;
+}
+.score-form-row button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+.form-msg {
+    font-size: 13px;
+    margin: 8px 0 0;
+    min-height: 1em;
+}
+.form-msg.ok { color: #2f7a3f; }
+.form-msg.err { color: #a33; }
+
+.score-entry-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+}
+.score-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-top: 1px dashed #e8e1cd;
+    font-size: 13.5px;
+    color: #3f382c;
+}
+.score-entry-subject {
+    font-weight: 700;
+    min-width: 70px;
+}
+.score-entry-term {
+    color: #8a7c63;
+    flex: 1;
+}
+.score-entry-score {
+    font-variant-numeric: tabular-nums;
+}
+.score-entry-remove {
+    flex-shrink: 0;
+    cursor: pointer;
+    color: #b98a8a;
+    font-size: 13px;
+    border: none;
+    background: none;
+}
+.score-entry-remove:hover {
+    color: #a33;
+}
+.score-entry-empty {
+    color: #999;
+    font-style: italic;
+    padding: 8px 4px;
+}
