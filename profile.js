@@ -15,6 +15,9 @@ const AVATAR_PRESETS = [
         url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.jpg`,
         exclusiveTo: ["ここにユーザーUUID"] },
 
+    // ↓ 「浮く・波打つ・水しぶき」の本格演出付きアバターの例。
+    // front(キャラの透過PNG) と back(背景) を両方指定すると自動でこの演出になる。
+    // water:true で波・水しぶきの演出が付く。focusで切り抜き位置、zoomでアップ具合を調整。
     { key: "avatar_summer", name: "summer",
         layered: {
             front: `${GITHUB_ASSETS_BASE}/avatars/summer_front.png`,
@@ -22,12 +25,22 @@ const AVATAR_PRESETS = [
         },
         focus: "50% 70%",
         zoom: 1.3, // 1.0=そのまま。値を上げるほど顔寄りにアップになる（0.1刻みで調整推奨）
+        water: true,
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 
+    // ↓ front(人物の透過PNG)とback(背景のみ)を分離した「王者」演出の例。
+    // frontAnim:"threat" で、浮遊ではなく肩を上げて下ろす威圧的な動きになる。
+    // petals:true で、frontの手前ではなく「backとfrontの間＝人物の背後」で花吹雪が舞う。
+    // text は行ごとに配列で渡す（1文字ずつ1秒間隔で表示、達筆フォント）。
     { key: "avatar_king", name: "王者",
-        url: `${GITHUB_ASSETS_BASE}/avatars/avatar_king.jpg`,
-        focus: "50% 20%",
-        effects: { sway: true, petals: true, text: ["2学期中間", "王者"] },
+        layered: {
+            front: `${GITHUB_ASSETS_BASE}/avatars/king_front.png`,
+            back:  `${GITHUB_ASSETS_BASE}/avatars/king_back.jpg`
+        },
+        focus: "50% 15%",
+        frontAnim: "threat",
+        petals: true,
+        text: ["2学期中間", "王者"],
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 
@@ -163,6 +176,9 @@ function renderAvatar(avatarKey) {
     if (preset.layered) {
         el.style.background = "#fff";
         const zoom = preset.zoom || 1;
+        const frontClass = preset.frontAnim === "threat" ? "avl-front avl-front--threat" : "avl-front";
+        const lines = preset.text || [];
+
         el.innerHTML = `
             <div class="avl">
                 <div class="avl-wave">
@@ -170,23 +186,12 @@ function renderAvatar(avatarKey) {
                          style="object-position:${focus}"
                          onerror="this.parentElement.style.display='none'">
                 </div>
-                <div class="avl-shimmer"></div>
-                <img class="avl-front" src="${preset.layered.front}" alt="プロフィール画像"
+                ${preset.water ? `<div class="avl-shimmer"></div>` : ""}
+                ${preset.petals ? `<div class="avl-petals"></div>` : ""}
+                <img class="${frontClass}" src="${preset.layered.front}" alt="プロフィール画像"
                      style="object-position:${focus}; --afzoom:${zoom}"
                      onerror="this.style.display='none'">
-                <div class="avl-splash"></div>
-            </div>
-        `;
-        avatarEffectTimers.push(startAvatarSplash(el.querySelector(".avl-splash")));
-    } else if (preset.effects) {
-        el.style.background = "#fff";
-        const lines = preset.effects.text || [];
-        el.innerHTML = `
-            <div class="avk">
-                <img class="avk-img" src="${preset.url}" alt="プロフィール画像"
-                     style="object-position:${focus}"
-                     onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'">
-                ${preset.effects.petals ? `<div class="avk-petals"></div>` : ""}
+                ${preset.water ? `<div class="avl-splash"></div>` : ""}
                 ${lines.length ? `<div class="avk-caption">
                     ${lines.map(line => `<span class="avk-caption-line">${
                         [...line].map(ch => `<span class="ch">${ch === " " ? "&nbsp;" : ch}</span>`).join("")
@@ -194,8 +199,11 @@ function renderAvatar(avatarKey) {
                 </div>` : ""}
             </div>
         `;
-        if (preset.effects.petals) {
-            avatarEffectTimers.push(startPetalStorm(el.querySelector(".avk-petals")));
+        if (preset.water) {
+            avatarEffectTimers.push(startAvatarSplash(el.querySelector(".avl-splash")));
+        }
+        if (preset.petals) {
+            avatarEffectTimers.push(startPetalStorm(el.querySelector(".avl-petals")));
         }
         if (lines.length) {
             avatarEffectTimers.push(...startCaptionTyping(el.querySelectorAll(".avk-caption .ch")));
@@ -228,15 +236,15 @@ function startAvatarSplash(layer) {
     return setInterval(spawnDrop, 220);
 }
 
-// 王者アバターの花吹雪を定期生成する
+// 花吹雪を定期生成する（backの上・frontの下に敷いたレイヤーに追加するので、人物の背後で舞う）
 function startPetalStorm(layer) {
     if (!layer) return null;
 
     function spawnPetal() {
         const p = document.createElement("div");
-        p.className = "avk-petal";
+        p.className = "avl-petal";
         p.style.left = Math.random() * 100 + "%";
-        p.style.setProperty("--avk-drift", (Math.random() * 60 - 30) + "px");
+        p.style.setProperty("--avl-drift", (Math.random() * 60 - 30) + "px");
         p.style.animationDuration = (2.6 + Math.random() * 1.8) + "s";
         p.style.transform = `rotate(${Math.random() * 360}deg)`;
         layer.appendChild(p);
