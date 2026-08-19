@@ -326,6 +326,12 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     75%{     transform:scale(var(--afzoom, 1)) translateY(-4px)  rotate(0.6deg); }
 }
 
+/* 上下の動きなし・完全に静止させたい場合用（オーラ演出などと組み合わせる） */
+.avl-front.avl-front--static{
+    animation:none;
+    transform:scale(var(--afzoom, 1));
+}
+
 .avl-splash{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
 .avl-drop{
     position:absolute;
@@ -372,6 +378,42 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     8%{   opacity:.9; }
     85%{  opacity:.8; }
     100%{ transform:translate(var(--avl-drift, 24px), 128%) rotate(340deg); opacity:0; }
+}
+
+/* backの上・frontの下に敷く「後光」オーラ。人物の背後からじんわり発光・脈動する。
+   色はデフォルトで王者アバターに合わせた金赤系（--aura-colorで変更可）。 */
+.avl-aura{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    mix-blend-mode:screen;
+}
+.avl-aura::before{
+    content:"";
+    position:absolute;
+    inset:-15%;
+    background:radial-gradient(circle at 50% 55%,
+        var(--aura-color-in, rgba(255,214,140,.75)) 0%,
+        var(--aura-color-mid, rgba(214,64,48,.42)) 38%,
+        var(--aura-color-out, rgba(120,20,20,0)) 72%);
+    filter:blur(3px);
+    animation:avlAuraPulse 3.4s ease-in-out infinite;
+}
+/* 芯側にもう一段、細かい光の粒を重ねてより「立ち上る光」感を出す */
+.avl-aura::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 50% 60%, rgba(255,240,200,.5) 0%, transparent 55%);
+    animation:avlAuraFlicker 1.8s ease-in-out infinite;
+}
+@keyframes avlAuraPulse{
+    0%,100%{ transform:scale(0.92); opacity:.7; }
+    50%{     transform:scale(1.1);  opacity:1; }
+}
+@keyframes avlAuraFlicker{
+    0%,100%{ opacity:.55; }
+    50%{     opacity:.85; }
 }
 
 @media (prefers-reduced-motion: reduce){
