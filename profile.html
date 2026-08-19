@@ -216,10 +216,11 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 /* ===== 中央: アバター + 左右コレクション ===== */
 
 .stage-row{
+    width:100%;
     display:flex;
     align-items:center;
-    justify-content:center;
-    gap:clamp(10px,3vw,26px);
+    justify-content:space-between;
+    gap:clamp(8px,2vw,20px);
 }
 
 .collection-col{
@@ -267,8 +268,8 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 
 .avatar-photo{
-    width:clamp(120px,30vw,150px);
-    height:clamp(120px,30vw,150px);
+    width:clamp(150px,42vw,220px);
+    height:clamp(150px,42vw,220px);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -278,7 +279,7 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
    こうしないと詳細度の関係で、入れ子の .avl-front（object-fit:contain指定）を
    このルールが上書きしてしまい、本格演出アバターの頭が見切れてしまう。 */
 .avatar-photo > img{ width:100%; height:100%; object-fit:cover; }
-.avatar-fallback{ font-size:clamp(50px,12vw,64px); }
+.avatar-fallback{ font-size:clamp(60px,16vw,92px); }
 
 /* ===== 本格演出アバター（front/back レイヤー） ===== */
 
@@ -684,9 +685,11 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 
 @media (max-width:480px){
-    .stage-row{ gap:8px; }
-    .collection-slot{ width:44px; height:44px; }
-    .slot-label{ font-size:8px; }
+    .stage-row{ gap:6px; }
+    .collection-slot{ width:38px; height:38px; }
+    .slot-label{ display:none; }
+    .slot-lock{ font-size:12px; }
+    .avatar-photo{ width:clamp(130px,48vw,170px); height:clamp(130px,48vw,170px); }
 }
 </style>
 </head>
