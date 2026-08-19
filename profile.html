@@ -342,48 +342,46 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     100%{ transform:translateY(-130px) scale(1); opacity:0; }
 }
 
-@media (prefers-reduced-motion: reduce){
-    .avl-front{ animation:none !important; transform:translateY(0) !important; }
-    .avl-shimmer, .avl-drop{ animation:none !important; }
+/* 威圧感のある「肩を上げて下ろす」動き（王者アバターなど用）。
+   浮遊するavlFloatとは違い、腰~足元あたりを軸にして
+   ゆっくり肩を持ち上げ、少し溜めて、落とす――という重みのある動きにする。 */
+.avl-front.avl-front--threat{
+    animation:avlThreat 2.6s cubic-bezier(.45,0,.2,1) infinite;
+    transform-origin:50% 88%;
+}
+@keyframes avlThreat{
+    0%{   transform:scale(var(--afzoom, 1)) translateY(0)   scaleY(1); }
+    30%{  transform:scale(var(--afzoom, 1)) translateY(-7px) scaleY(1.035); }
+    55%{  transform:scale(var(--afzoom, 1)) translateY(-7px) scaleY(1.035); }
+    100%{ transform:scale(var(--afzoom, 1)) translateY(0)   scaleY(1); }
 }
 
-/* ===== 王者演出アバター（1枚絵＋揺れ・花吹雪・文字送り） ===== */
-
-.avk{ position:relative; width:100%; height:100%; overflow:hidden; }
-
-.avk-img{
-    width:100%; height:100%;
-    object-fit:cover;
-    display:block;
-    /* 足元を軸に、歩いているような肩・上体の揺れを付ける */
-    transform-origin:50% 100%;
-    animation:avkSway 2.6s ease-in-out infinite;
-    will-change:transform;
-}
-@keyframes avkSway{
-    0%,100%{ transform:rotate(-1.4deg) translateX(-1px); }
-    25%{     transform:rotate(0.8deg)  translateX(1px); }
-    50%{     transform:rotate(-0.4deg) translateX(0); }
-    75%{     transform:rotate(1.4deg)  translateX(1px); }
-}
-
-/* 花吹雪 */
-.avk-petals{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
-.avk-petal{
+/* backの上・frontの下に敷く花吹雪レイヤー（人物の背後で舞う） */
+.avl-petals{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.avl-petal{
     position:absolute;
     top:-8%;
     width:8px; height:11px;
     background:radial-gradient(circle at 30% 30%, #ffb3b3, #b3182f 75%);
     border-radius:60% 40% 60% 40% / 60% 60% 40% 40%;
     opacity:0;
-    animation:avkPetalFall linear infinite;
+    animation:avlPetalFall linear infinite;
 }
-@keyframes avkPetalFall{
+@keyframes avlPetalFall{
     0%{   transform:translate(0, 0) rotate(0deg);   opacity:0; }
-    8%{   opacity:.95; }
-    85%{  opacity:.85; }
-    100%{ transform:translate(var(--avk-drift, 24px), 128%) rotate(340deg); opacity:0; }
+    8%{   opacity:.9; }
+    85%{  opacity:.8; }
+    100%{ transform:translate(var(--avl-drift, 24px), 128%) rotate(340deg); opacity:0; }
 }
+
+@media (prefers-reduced-motion: reduce){
+    .avl-front{ animation:none !important; transform:translateY(0) !important; }
+    .avl-shimmer, .avl-drop, .avl-petal{ animation:none !important; }
+}
+
+/* ===== 演出アバターの下部キャプション（達筆フォントで1文字ずつ表示） ===== */
+
+.avk{ position:relative; width:100%; height:100%; overflow:hidden; }
 
 /* 下部の文字送りキャプション（達筆フォント） */
 .avk-caption{
@@ -410,8 +408,6 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 .avk-caption .ch.is-visible{ opacity:1; transform:translateY(0); }
 
 @media (prefers-reduced-motion: reduce){
-    .avk-img{ animation:none !important; transform:none !important; }
-    .avk-petal{ animation:none !important; display:none !important; }
     .avk-caption .ch{ transition:none !important; opacity:1 !important; transform:none !important; }
 }
 
