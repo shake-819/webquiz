@@ -34,14 +34,16 @@ const AVATAR_PRESETS = [
     // text は行ごとに配列で渡す（1文字ずつ1秒間隔で表示、達筆フォント）。
     { key: "avatar_king", name: "王者",
         layered: {
-            front: `${GITHUB_ASSETS_BASE}/avatars/king_front.webp`,
-            back:  `${GITHUB_ASSETS_BASE}/avatars/king_back.webp`
+            front: `${GITHUB_ASSETS_BASE}/avatars/king_front.png`,
+            back:  `${GITHUB_ASSETS_BASE}/avatars/king_back.jpg`
         },
         focus: "50% 15%",
-        frontAnim: "threat",
+        waveDistort: false, // 背景の波打ち揺れなし
+        frontAnim: "none",  // frontの上下の動きなし（静止）
+        aura: true,         // 背後からオーラが脈動する
         petals: true,
         text: ["2学期中間", "王者"],
-        exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
+        exclusiveTo: ["ここにユーザーUUID"] },
 ];
 
 // ----- コレクションアイテム -----
@@ -176,17 +178,23 @@ function renderAvatar(avatarKey) {
     if (preset.layered) {
         el.style.background = "#fff";
         const zoom = preset.zoom || 1;
-        const frontClass = preset.frontAnim === "threat" ? "avl-front avl-front--threat" : "avl-front";
+        const frontClass =
+            preset.frontAnim === "threat" ? "avl-front avl-front--threat" :
+            preset.frontAnim === "none"   ? "avl-front avl-front--static" :
+            "avl-front";
         const lines = preset.text || [];
+        // waveDistortはデフォルトtrue（従来通り波打つ）。falseを指定した時だけ揺らぎを切る。
+        const waveStyle = preset.waveDistort === false ? `style="filter:none"` : "";
 
         el.innerHTML = `
             <div class="avl">
-                <div class="avl-wave">
+                <div class="avl-wave" ${waveStyle}>
                     <img src="${preset.layered.back}" alt=""
                          style="object-position:${focus}"
                          onerror="this.parentElement.style.display='none'">
                 </div>
                 ${preset.water ? `<div class="avl-shimmer"></div>` : ""}
+                ${preset.aura ? `<div class="avl-aura"></div>` : ""}
                 ${preset.petals ? `<div class="avl-petals"></div>` : ""}
                 <img class="${frontClass}" src="${preset.layered.front}" alt="プロフィール画像"
                      style="object-position:${focus}; --afzoom:${zoom}"
