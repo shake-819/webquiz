@@ -34,8 +34,8 @@ const AVATAR_PRESETS = [
     // text は行ごとに配列で渡す（1文字ずつ1秒間隔で表示、達筆フォント）。
     { key: "avatar_king", name: "王者",
         layered: {
-            front: `${GITHUB_ASSETS_BASE}/avatars/king_front.png`,
-            back:  `${GITHUB_ASSETS_BASE}/avatars/king_back.jpg`
+            front: `${GITHUB_ASSETS_BASE}/avatars/king_front.webp`,
+            back:  `${GITHUB_ASSETS_BASE}/avatars/king_back.webp`
         },
         focus: "50% 15%",
         waveDistort: false, // 背景の波打ち揺れなし
@@ -43,7 +43,7 @@ const AVATAR_PRESETS = [
         aura: true,         // 背後からオーラが脈動する
         petals: true,
         text: ["2学期中間", "王者"],
-        exclusiveTo: ["ここにユーザーUUID"] },
+        exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 
 // ----- コレクションアイテム -----
