@@ -634,31 +634,20 @@ async function sendChat() {
 // ==========================
 // AIチャット機能
 // ==========================
-const GROQ_API_KEY = "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"; // ⚠️下の注意参照
+// ⚠️ GroqのAPIキーはここには置かない。
+//    Supabase Edge Function「groq-chat」側のシークレットとして保持している。
 const AI_BOT_USER_ID = "d23c8281-7c28-4440-a335-a8c0d20c9442";
 const AI_BOT_NAME = "ちゃっとAI";
 
 async function askAI(promptText, grade) {
     try {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "openai/gpt-oss-120b",
-                messages: [
-                    { role: "system", content: "あなたはクイズアプリのクラスチャットにいる親切なAIアシスタントです。日本語で簡潔に答えてください。わからないことは必ず分からないと言ってください。" },
-                    { role: "user", content: promptText }
-                ]
-            })
+        const { data, error } = await supabaseClient.functions.invoke("groq-chat", {
+            body: { promptText }
         });
 
-        const data = await response.json();
-        const aiText =
-            data.choices?.[0]?.message?.content?.trim() ||
-            "うまく答えられませんでした…";
+        if (error) throw error;
+
+        const aiText = data?.aiText || "うまく答えられませんでした…";
 
         await supabaseClient
             .from("chat_messages")
