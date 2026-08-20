@@ -54,9 +54,9 @@ const AVATAR_PRESETS = [
 // 事前にSupabaseで以下を実行しておくこと:
 //   alter table users add column if not exists collection_keys jsonb not null default '[]'::jsonb;
 const COLLECTION_ITEMS = [
-    // { key: "summer2026", name: "夏祭り記念メダル",
-    //   url: `${GITHUB_ASSETS_BASE}/collection/summer2026.png`,
-    //   exclusiveTo: ["ここにユーザーUUID", "複数人いれば追加でUUID"] },
+     { key: "dice", name: "黄金のサイコロ",
+       url: `${GITHUB_ASSETS_BASE}/collection/dice_gold.webp`,
+       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 const COLLECTION_SLOT_COUNT = 6; // 左右3枠ずつ
 
