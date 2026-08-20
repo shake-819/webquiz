@@ -46,17 +46,11 @@ const AVATAR_PRESETS = [
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 ];
 
-// ----- コレクションアイテム -----
-// イベントで入手する想定。exclusiveToで「入手済みの人」を指定する。
-// exclusiveTo未設定の状態＝まだ誰も入手していない（常にロック表示）。
-//
-// 表示にはusersテーブルに collection_keys 列（jsonb, デフォルト '[]'）が必要。
-// 事前にSupabaseで以下を実行しておくこと:
-//   alter table users add column if not exists collection_keys jsonb not null default '[]'::jsonb;
+
 const COLLECTION_ITEMS = [
      { key: "dice", name: "黄金のサイコロ",
        url: `${GITHUB_ASSETS_BASE}/collection/dice_gold.webp`,
-       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
+       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f", "複数人いれば追加でUUID"] },
 ];
 const COLLECTION_SLOT_COUNT = 6; // 左右3枠ずつ
 
@@ -356,8 +350,19 @@ function buildUnlockedSlot(item) {
     slot.innerHTML = `
         <img class="slot-img" src="${item.url}" alt="${item.name || ""}"
              onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-lock',textContent:'🔒'}))">
-        ${item.name ? `<span class="slot-label">${item.name}</span>` : ""}
+        ${item.name ? `<span class="slot-label slot-label--touch">${item.name}</span>` : ""}
     `;
+
+    // 名前は常時表示せず、タップした時だけ吹き出しで一瞬見せる
+    if (item.name) {
+        let hideTimer = null;
+        slot.addEventListener("click", () => {
+            clearTimeout(hideTimer);
+            slot.classList.add("is-touched");
+            hideTimer = setTimeout(() => slot.classList.remove("is-touched"), 2200);
+        });
+    }
+
     return slot;
 }
 
