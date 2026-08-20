@@ -242,10 +242,35 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 .collection-slot.is-locked{ color:var(--ink-soft); }
 .collection-slot.is-unlocked{
+    position:relative;
+    z-index:1;
     border-style:solid;
     border-color:var(--gold-soft, var(--gold));
     background:#FBF6E7;
     padding:4px;
+    /* 枠の外まではみ出す金のオーラ */
+    box-shadow:
+        0 0 6px 2px rgba(184,145,46,.55),
+        0 0 16px 6px rgba(228,203,134,.6),
+        0 0 30px 14px rgba(255,214,120,.4);
+    animation:collectionAuraPulse 2.6s ease-in-out infinite;
+}
+@keyframes collectionAuraPulse{
+    0%,100%{
+        box-shadow:
+            0 0 6px 2px rgba(184,145,46,.5),
+            0 0 16px 6px rgba(228,203,134,.55),
+            0 0 28px 12px rgba(255,214,120,.32);
+    }
+    50%{
+        box-shadow:
+            0 0 10px 4px rgba(184,145,46,.75),
+            0 0 26px 10px rgba(228,203,134,.8),
+            0 0 46px 20px rgba(255,214,120,.55);
+    }
+}
+@media (prefers-reduced-motion: reduce){
+    .collection-slot.is-unlocked{ animation:none; }
 }
 .slot-img{ width:100%; height:32px; object-fit:contain; }
 .slot-lock{ font-size:15px; opacity:.7; }
@@ -327,10 +352,15 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     75%{     transform:scale(var(--afzoom, 1)) translateY(-4px)  rotate(0.6deg); }
 }
 
-/* 上下の動きなし・完全に静止させたい場合用（オーラ演出などと組み合わせる） */
+/* 上下の動きなし・完全に静止させたい場合用（オーラ演出などと組み合わせる）。
+   動かさない場合は avlFloat 用の10%余白（inset）が不要になるので、
+   frontを枠いっぱいに広げて周囲の余白をなくす。 */
 .avl-front.avl-front--static{
     animation:none;
     transform:scale(var(--afzoom, 1));
+    inset:0;
+    width:100%;
+    height:100%;
 }
 
 .avl-splash{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
@@ -505,6 +535,22 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 .picker-item img{ width:100%; height:100%; object-fit:cover; border-radius:8px; }
 .picker-item img.thumb-contain{ object-fit:contain; padding:6px; box-sizing:border-box; background:#fff; }
 .picker-empty{ grid-column:1/-1; font-size:13px; color:var(--ink-soft); text-align:center; padding:8px 0; }
+
+/* コレクション選択パネルで「追加する」を選んだアイテム */
+.picker-item.is-selected{
+    border-color:var(--gold);
+    box-shadow:0 0 0 2px var(--gold-soft, var(--gold)) inset;
+}
+
+.collection-edit-row{
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+}
+.btn-collection-edit{
+    font-size:12px;
+    padding:6px 14px;
+}
 
 #commentInput{
     width:100%;
@@ -754,6 +800,10 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
                 <div class="collection-col" id="collectionRight"></div>
             </div>
 
+            <div class="collection-edit-row">
+                <button id="editCollectionBtn" class="btn-outline btn-collection-edit" title="コレクションを編集" hidden>✎ コレクションを編集</button>
+            </div>
+
         </div>
 
         <!-- アバター選択パネル（Premiumのみ、自分のプロフィールでのみ表示） -->
@@ -761,6 +811,16 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
             <p class="picker-title">写真を選ぶ<span class="picker-sub">Premium限定</span></p>
             <div class="picker-grid" id="pickerGrid"></div>
             <button class="btn-outline" id="closePickerBtn">閉じる</button>
+        </div>
+
+        <!-- コレクション選択パネル（入手済みアイテムを持つ本人だけが選んで追加できる） -->
+        <div class="avatar-picker" id="collectionPicker" hidden>
+            <p class="picker-title">コレクションを選ぶ<span class="picker-sub">最大6個まで</span></p>
+            <div class="picker-grid" id="collectionPickerGrid"></div>
+            <div class="editor-actions">
+                <button class="btn-stamp--sm" id="saveCollectionBtn">保存する</button>
+                <button class="btn-outline" id="closeCollectionPickerBtn">閉じる</button>
+            </div>
         </div>
 
         <!-- コメント編集パネル -->
