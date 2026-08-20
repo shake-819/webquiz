@@ -49,6 +49,10 @@ const AVATAR_PRESETS = [
 // ----- コレクションアイテム -----
 // イベントで入手する想定。exclusiveToで「入手済みの人」を指定する。
 // exclusiveTo未設定の状態＝まだ誰も入手していない（常にロック表示）。
+//
+// 表示にはusersテーブルに collection_keys 列（jsonb, デフォルト '[]'）が必要。
+// 事前にSupabaseで以下を実行しておくこと:
+//   alter table users add column if not exists collection_keys jsonb not null default '[]'::jsonb;
 const COLLECTION_ITEMS = [
     // { key: "summer2026", name: "夏祭り記念メダル",
     //   url: `${GITHUB_ASSETS_BASE}/collection/summer2026.png`,
@@ -76,6 +80,7 @@ let isOwnProfile = false;
 let currentProfile = null; // 表示対象ユーザーの users 行
 let viewerIsPremium = false; // 自分自身がPremiumかどうか
 let avatarEffectTimers = []; // 演出アバター（水しぶき・花吹雪・文字送りなど）のタイマー群
+let collectionSelection = []; // コレクション編集パネルで選択中のkey配列（保存前の一時状態）
 
 const params = new URLSearchParams(location.search);
 
@@ -111,7 +116,7 @@ async function init() {
 async function loadProfile() {
     const { data, error } = await supabaseClient
         .from("users")
-        .select("id,name,grade,avatar_key,comment,plan,correct,wrong")
+        .select("id,name,grade,avatar_key,comment,plan,correct,wrong,collection_keys")
         .eq("id", viewedUserId)
         .single();
 
@@ -151,6 +156,10 @@ function renderProfile() {
     const canEdit = isOwnProfile && viewerIsPremium;
     document.getElementById("editAvatarBtn").hidden = !canEdit;
     document.getElementById("editCommentBtn").hidden = !canEdit;
+
+    // コレクション編集ボタンは、上記に加えて「入手済みアイテムが1つ以上ある」ときだけ表示
+    const ownedCollectionCount = getOwnedCollectionItems().length;
+    document.getElementById("editCollectionBtn").hidden = !(canEdit && ownedCollectionCount > 0);
 
     // 自分のプロフィールで、かつPremiumでない場合だけ案内を表示
     document.getElementById("premiumHint").hidden = !(isOwnProfile && !viewerIsPremium);
@@ -306,22 +315,34 @@ function renderStats(correct, wrong) {
     document.getElementById("statRate").firstChild.textContent = rate;
 }
 
+// 表示対象ユーザー(viewedUserId)が exclusiveTo に含まれているアイテム＝入手済み
+function getOwnedCollectionItems() {
+    return COLLECTION_ITEMS.filter(
+        item => item.exclusiveTo && item.exclusiveTo.includes(viewedUserId)
+    );
+}
+
 // ----- コレクション枠（左右） -----
-// 表示対象ユーザー(viewedUserId)が exclusiveTo に含まれているアイテムだけ
-// 「入手済み」として表示し、残りはロック表示で埋める。
+// 入手済みアイテムのうち、本人が「追加」として選んだもの（collection_keysの順）を
+// 優先して表示し、まだ選ばれていない入手済み分は後ろに補完する。残りはロック表示で埋める。
 function renderCollectionSlots() {
     const left = document.getElementById("collectionLeft");
     const right = document.getElementById("collectionRight");
     left.innerHTML = "";
     right.innerHTML = "";
 
-    const unlocked = COLLECTION_ITEMS.filter(
-        item => item.exclusiveTo && item.exclusiveTo.includes(viewedUserId)
-    );
+    const owned = getOwnedCollectionItems();
+    const savedKeys = Array.isArray(currentProfile?.collection_keys) ? currentProfile.collection_keys : [];
+
+    const chosen = savedKeys
+        .map(key => owned.find(item => item.key === key))
+        .filter(Boolean);
+    const remaining = owned.filter(item => !chosen.includes(item));
+    const displayed = [...chosen, ...remaining].slice(0, COLLECTION_SLOT_COUNT);
 
     const slots = [];
     for (let i = 0; i < COLLECTION_SLOT_COUNT; i++) {
-        slots.push(unlocked[i] ? buildUnlockedSlot(unlocked[i]) : buildLockedSlot());
+        slots.push(displayed[i] ? buildUnlockedSlot(displayed[i]) : buildLockedSlot());
     }
 
     slots.slice(0, 3).forEach(s => left.appendChild(s));
@@ -358,6 +379,10 @@ function bindEvents() {
     document.getElementById("editCommentBtn")?.addEventListener("click", openCommentEditor);
     document.getElementById("cancelCommentBtn")?.addEventListener("click", closeCommentEditor);
     document.getElementById("saveCommentBtn")?.addEventListener("click", saveComment);
+
+    document.getElementById("editCollectionBtn")?.addEventListener("click", openCollectionPicker);
+    document.getElementById("closeCollectionPickerBtn")?.addEventListener("click", closeCollectionPicker);
+    document.getElementById("saveCollectionBtn")?.addEventListener("click", saveCollectionSelection);
 }
 
 // ----- アバター選択 -----
@@ -450,4 +475,77 @@ async function saveComment() {
     currentProfile.comment = value;
     renderComment(value);
     closeCommentEditor();
+}
+
+// ----- コレクション選択（決められたユーザーだけが、入手済みアイテムを選んで追加できる） -----
+function openCollectionPicker() {
+    if (!isOwnProfile || !viewerIsPremium) return;
+
+    const grid = document.getElementById("collectionPickerGrid");
+    grid.innerHTML = "";
+
+    const owned = getOwnedCollectionItems();
+
+    if (owned.length === 0) {
+        grid.innerHTML = `<p class="picker-empty">選べるコレクションがまだありません</p>`;
+    }
+
+    // 現在表示中のもの（保存済みcollection_keysのうち、今も入手済みのもの）を初期選択状態にする
+    const savedKeys = Array.isArray(currentProfile?.collection_keys) ? currentProfile.collection_keys : [];
+    collectionSelection = savedKeys.filter(key => owned.some(item => item.key === key));
+
+    owned.forEach(item => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "picker-item";
+        btn.title = item.name || "";
+        btn.classList.toggle("is-selected", collectionSelection.includes(item.key));
+
+        btn.innerHTML = `<img class="thumb-contain" src="${item.url}" alt="${item.name || ""}"
+            onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🎖️'}))">`;
+        btn.addEventListener("click", () => toggleCollectionItem(item.key, btn));
+        grid.appendChild(btn);
+    });
+
+    document.getElementById("collectionPicker").hidden = false;
+}
+
+// 選択/解除を切り替える。追加できるのは最大でも枠の数（COLLECTION_SLOT_COUNT）まで。
+function toggleCollectionItem(key, btn) {
+    const idx = collectionSelection.indexOf(key);
+    if (idx >= 0) {
+        collectionSelection.splice(idx, 1);
+        btn.classList.remove("is-selected");
+        return;
+    }
+
+    if (collectionSelection.length >= COLLECTION_SLOT_COUNT) {
+        alert(`コレクションは最大${COLLECTION_SLOT_COUNT}個までしか追加できません`);
+        return;
+    }
+    collectionSelection.push(key);
+    btn.classList.add("is-selected");
+}
+
+function closeCollectionPicker() {
+    document.getElementById("collectionPicker").hidden = true;
+}
+
+async function saveCollectionSelection() {
+    if (!isOwnProfile || !viewerIsPremium) return;
+
+    const { error } = await supabaseClient
+        .from("users")
+        .update({ collection_keys: collectionSelection })
+        .eq("id", viewedUserId);
+
+    if (error) {
+        console.error(error);
+        alert("コレクションの更新に失敗しました");
+        return;
+    }
+
+    currentProfile.collection_keys = [...collectionSelection];
+    renderCollectionSlots();
+    closeCollectionPicker();
 }
