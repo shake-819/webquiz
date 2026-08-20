@@ -641,7 +641,9 @@ const AI_BOT_NAME = "ちゃっとAI";
 
 async function askAI(promptText, grade) {
     try {
-        const { data, error } = await supabaseClient.functions.invoke("groq-chat", {
+        // ⚠️ Supabase側の表示名は「groq-chat」だが、実際のURL(slug)は
+        //    作成時のまま "dynamic-processor" になっているため、こちらを指定する。
+        const { data, error } = await supabaseClient.functions.invoke("dynamic-processor", {
             body: { promptText }
         });
 
