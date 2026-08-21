@@ -53,6 +53,7 @@ const submitBtn = document.getElementById("submit");
 const nextBtn = document.getElementById("next");
 const categorySelect = document.getElementById("categorySelect");
 const hintBtn = document.getElementById("hint");
+const showAnswerBtn = document.getElementById("showAnswer");
 
 let revealedIndexes = [];
 let usedHint = false;
@@ -142,6 +143,9 @@ function nextQuiz() {
     usedHint = false;
     answer.value = "";
     revealedIndexes = [];
+
+    // 答え表示で押せなくしていたボタン類を、次の問題に進むタイミングで解除する
+    unlockAfterAnswerShown();
 
     // 選択中カテゴリ
     const selectedCategory = categorySelect.value;
@@ -685,15 +689,34 @@ chatInput.addEventListener("keydown", (e) => {
 
 });
 document
-.getElementById("logout")
-.addEventListener("click", logout);
+.getElementById("showAnswer")
+.addEventListener("click", showAnswer);
 
-async function logout(){
+// 答えをすべて表示する。表示後は「次の問題」以外を押せなくする
+// （答えを見た状態で回答して正解扱いになる、を防ぐため）
+function showAnswer() {
+    if (!currentQuestion) return;
 
-    await supabaseClient.auth.signOut();
+    result.textContent = `📖 答え：${currentQuestion.answer}`;
+    lockAfterAnswerShown();
+}
 
-    location.href = "login.html";
+function lockAfterAnswerShown() {
+    submitBtn.disabled = true;
+    hintBtn.disabled = true;
+    answer.disabled = true;
+    showAnswerBtn.disabled = true;
+    categorySelect.disabled = true;
+    document.getElementById("home").disabled = true;
+}
 
+function unlockAfterAnswerShown() {
+    submitBtn.disabled = false;
+    hintBtn.disabled = false;
+    answer.disabled = false;
+    showAnswerBtn.disabled = false;
+    categorySelect.disabled = false;
+    document.getElementById("home").disabled = false;
 }
 
 
