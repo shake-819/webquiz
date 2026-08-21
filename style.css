@@ -216,6 +216,17 @@ button:focus-visible{ outline:2px solid var(--red-pen); outline-offset:2px; }
 }
 .btn-text:hover{ color:var(--red-pen); }
 
+button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+    box-shadow:none;
+}
+button:disabled:hover{ transform:none; }
+select:disabled, input:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
+
 #result{
     text-align:center;
     font-family:"Zen Old Mincho", serif;
