@@ -1,6 +1,10 @@
 const GITHUB_ASSETS_BASE =
     "https://raw.githubusercontent.com/shake-819/webquiz/main/assets";
 
+// コレクションの入手済みアイテムの背後に敷く、金色の光芒（オーラ）画像。
+// assets/collection/aura-gold-burst.png を配置しておくこと。
+const COLLECTION_AURA_URL = `${GITHUB_ASSETS_BASE}/collection/aura-gold-burst.jpeg`;
+
 // ----- アバタープリセット -----
 const AVATAR_PRESETS = [
     { key: "avatar1", url: `${GITHUB_ASSETS_BASE}/avatars/avatar1.jpg` },
@@ -347,6 +351,7 @@ function buildUnlockedSlot(item) {
     const slot = document.createElement("div");
     slot.className = "collection-slot is-unlocked";
     slot.title = item.name || "";
+    slot.style.setProperty("--aura-img", `url("${COLLECTION_AURA_URL}")`);
     slot.innerHTML = `
         <img class="slot-img" src="${item.url}" alt="${item.name || ""}"
              onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-lock',textContent:'🔒'}))">
