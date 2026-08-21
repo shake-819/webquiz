@@ -230,7 +230,7 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 }
 
 .collection-slot{
-    width:58px; height:58px;
+    width:78px; height:78px;
     border:1.5px dashed var(--paper-line);
     border-radius:6px;
     background:var(--paper);
@@ -249,32 +249,54 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     background:#FBF6E7;
     padding:4px;
 }
-/* サイコロ（アイテム画像）の真後ろから発光するオーラ。
-   枠の縁を光らせるのではなく、中心から放射状に外へはみ出させる。 */
-.collection-slot.is-unlocked::before{
+/* サイコロ（アイテム画像）の真後ろから、渦を巻きながら燃え上がる炎のオーラ。
+   逆回転する2枚のconic-gradientを重ねて揺らめきを出し、枠を大きくはみ出させる。 */
+.collection-slot.is-unlocked::before,
+.collection-slot.is-unlocked::after{
     content:"";
     position:absolute;
-    inset:-48%;
     z-index:-1;
     border-radius:50%;
-    background:radial-gradient(circle at 50% 50%,
-        rgba(255,224,140,.9) 0%,
-        rgba(228,203,134,.55) 42%,
-        rgba(184,145,46,0) 74%);
-    filter:blur(4px);
     pointer-events:none;
-    animation:collectionAuraPulse 2.6s ease-in-out infinite;
+    mix-blend-mode:screen;
 }
-@keyframes collectionAuraPulse{
-    0%,100%{ transform:scale(.88); opacity:.75; }
-    50%{     transform:scale(1.08); opacity:1; }
+.collection-slot.is-unlocked::before{
+    inset:-75%;
+    background:conic-gradient(from 0deg,
+        rgba(255,224,140,0)     0deg,
+        rgba(255,170,30,.85)   35deg,
+        rgba(255,244,190,1)    85deg,
+        rgba(255,130,10,.8)   135deg,
+        rgba(255,224,140,0)   190deg,
+        rgba(255,170,30,.75)  255deg,
+        rgba(255,244,190,.95) 305deg,
+        rgba(255,224,140,0)   360deg);
+    filter:blur(4px);
+    animation:collectionAuraSwirl 3.4s linear infinite;
+}
+.collection-slot.is-unlocked::after{
+    inset:-52%;
+    background:conic-gradient(from 180deg,
+        rgba(184,145,46,0)     0deg,
+        rgba(255,110,15,.7)   55deg,
+        rgba(255,230,160,.9) 115deg,
+        rgba(184,145,46,0)   185deg,
+        rgba(255,150,25,.65) 255deg,
+        rgba(184,145,46,0)   360deg);
+    filter:blur(2.5px);
+    animation:collectionAuraSwirl 2.2s linear infinite reverse;
+}
+@keyframes collectionAuraSwirl{
+    from{ transform:rotate(0deg); }
+    to{   transform:rotate(360deg); }
 }
 @media (prefers-reduced-motion: reduce){
-    .collection-slot.is-unlocked::before{ animation:none; }
+    .collection-slot.is-unlocked::before,
+    .collection-slot.is-unlocked::after{ animation:none; }
 }
-.slot-img{ width:100%; height:32px; object-fit:contain; }
-.slot-lock{ font-size:15px; opacity:.7; }
-.slot-label{ font-size:9.5px; font-weight:700; letter-spacing:.02em; text-align:center; line-height:1.2; }
+.slot-img{ width:100%; height:44px; object-fit:contain; }
+.slot-lock{ font-size:19px; opacity:.7; }
+.slot-label{ font-size:10.5px; font-weight:700; letter-spacing:.02em; text-align:center; line-height:1.2; }
 
 /* コレクション（入手済み）アイテムの名前は常時表示せず、タップした時だけ吹き出しで見せる */
 .slot-label--touch{
@@ -753,9 +775,10 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 
 @media (max-width:480px){
     .stage-row{ gap:6px; }
-    .collection-slot{ width:38px; height:38px; }
+    .collection-slot{ width:52px; height:52px; }
+    .slot-img{ height:30px; }
     .slot-label{ display:none; }
-    .slot-lock{ font-size:12px; }
+    .slot-lock{ font-size:15px; }
     .avatar-photo{ width:clamp(130px,48vw,170px); height:clamp(130px,48vw,170px); }
 }
 </style>
