@@ -246,58 +246,35 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     z-index:1;
     border-style:solid;
     border-color:var(--gold-soft, var(--gold));
-    /* 明るいクリーム背景だと screen 合成の炎がほぼ見えなくなるので、
-       枠の中だけ暗くして炎の色がしっかり映えるようにする */
-    background:radial-gradient(circle at 50% 65%, #2a1204 0%, #150903 70%, #0c0503 100%);
+    /* 明るいクリーム背景だと光芒画像が沈んで見えづらいので、枠内だけ暗くする */
+    background:radial-gradient(circle at 50% 50%, #2a1204 0%, #150903 70%, #0c0503 100%);
     padding:4px;
     overflow:hidden; /* オーラは枠の内側に収める */
 }
-/* サイコロ（アイテム画像）の真後ろでゆらめく炎。
-   回転ではなく、揺らぎ（拡大縮小・傾き・左右のブレ）で炎らしさを出す。 */
-.collection-slot.is-unlocked::before,
-.collection-slot.is-unlocked::after{
+/* サイコロ（アイテム画像）の真後ろに、金色の光芒（オーラ）画像を敷いて
+   ゆっくり回転させながらわずかに拡大縮小させる（--aura-imgはJS側でセット）。 */
+.collection-slot.is-unlocked::before{
     content:"";
     position:absolute;
-    left:50%;
-    bottom:-10%;
+    inset:-55%;
     z-index:-1;
     pointer-events:none;
-    mix-blend-mode:screen;
-    border-radius:50% 50% 45% 45% / 60% 60% 40% 40%;
+    background-image:var(--aura-img);
+    background-size:cover;
+    background-position:center;
+    border-radius:50%;
+    animation:auraSpin 7s linear infinite, auraPulse 2.4s ease-in-out infinite;
 }
-.collection-slot.is-unlocked::before{
-    width:100%; height:100%;
-    margin-left:-50%;
-    transform-origin:50% 100%;
-    background:radial-gradient(circle at 50% 65%,
-        rgba(255,250,220,1)   0%,
-        rgba(255,180,40,1)   35%,
-        rgba(255,120,10,.9)  58%,
-        rgba(255,224,140,0)  82%);
-    filter:blur(2.5px);
-    animation:flameFlicker 1.15s ease-in-out infinite;
+@keyframes auraSpin{
+    from{ transform:rotate(0deg); }
+    to{   transform:rotate(360deg); }
 }
-.collection-slot.is-unlocked::after{
-    width:74%; height:112%;
-    margin-left:-37%;
-    transform-origin:50% 100%;
-    background:radial-gradient(circle at 50% 75%,
-        rgba(255,236,180,1)  0%,
-        rgba(255,150,25,.95) 42%,
-        rgba(184,145,46,0)   76%);
-    filter:blur(1.5px);
-    animation:flameFlicker .8s ease-in-out infinite reverse;
-}
-@keyframes flameFlicker{
-    0%   { transform:translateX(-5%) scaleY(.9)  scaleX(1.08) rotate(-4deg); opacity:.9; }
-    22%  { transform:translateX(4%)  scaleY(1.12) scaleX(.92)  rotate(3deg);  opacity:1;  }
-    46%  { transform:translateX(-3%) scaleY(.96)  scaleX(1.04) rotate(-2deg); opacity:.95; }
-    70%  { transform:translateX(5%)  scaleY(1.15) scaleX(.9)   rotate(4deg);  opacity:1;  }
-    100% { transform:translateX(-5%) scaleY(.9)   scaleX(1.08) rotate(-4deg); opacity:.9; }
+@keyframes auraPulse{
+    0%,100%{ opacity:.85; }
+    50%{     opacity:1; filter:brightness(1.15); }
 }
 @media (prefers-reduced-motion: reduce){
-    .collection-slot.is-unlocked::before,
-    .collection-slot.is-unlocked::after{ animation:none; }
+    .collection-slot.is-unlocked::before{ animation:none; }
 }
 .slot-img{ width:100%; height:58px; object-fit:contain; position:relative; z-index:1; }
 .slot-lock{ font-size:19px; opacity:.7; }
