@@ -246,7 +246,9 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     z-index:1;
     border-style:solid;
     border-color:var(--gold-soft, var(--gold));
-    background:#FBF6E7;
+    /* 明るいクリーム背景だと screen 合成の炎がほぼ見えなくなるので、
+       枠の中だけ暗くして炎の色がしっかり映えるようにする */
+    background:radial-gradient(circle at 50% 65%, #2a1204 0%, #150903 70%, #0c0503 100%);
     padding:4px;
     overflow:hidden; /* オーラは枠の内側に収める */
 }
@@ -257,47 +259,47 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     content:"";
     position:absolute;
     left:50%;
-    bottom:-6%;
+    bottom:-10%;
     z-index:-1;
     pointer-events:none;
     mix-blend-mode:screen;
     border-radius:50% 50% 45% 45% / 60% 60% 40% 40%;
 }
 .collection-slot.is-unlocked::before{
-    width:78%; height:82%;
-    margin-left:-39%;
+    width:100%; height:100%;
+    margin-left:-50%;
     transform-origin:50% 100%;
-    background:radial-gradient(circle at 50% 68%,
-        rgba(255,244,190,1)    0%,
-        rgba(255,170,30,.9)   38%,
-        rgba(255,130,10,.65)  62%,
-        rgba(255,224,140,0)   84%);
-    filter:blur(3px);
+    background:radial-gradient(circle at 50% 65%,
+        rgba(255,250,220,1)   0%,
+        rgba(255,180,40,1)   35%,
+        rgba(255,120,10,.9)  58%,
+        rgba(255,224,140,0)  82%);
+    filter:blur(2.5px);
     animation:flameFlicker 1.15s ease-in-out infinite;
 }
 .collection-slot.is-unlocked::after{
-    width:56%; height:92%;
-    margin-left:-28%;
+    width:74%; height:112%;
+    margin-left:-37%;
     transform-origin:50% 100%;
-    background:radial-gradient(circle at 50% 78%,
-        rgba(255,230,160,.95) 0%,
-        rgba(255,150,25,.75)  45%,
-        rgba(184,145,46,0)    78%);
-    filter:blur(2px);
+    background:radial-gradient(circle at 50% 75%,
+        rgba(255,236,180,1)  0%,
+        rgba(255,150,25,.95) 42%,
+        rgba(184,145,46,0)   76%);
+    filter:blur(1.5px);
     animation:flameFlicker .8s ease-in-out infinite reverse;
 }
 @keyframes flameFlicker{
-    0%   { transform:translateX(-5%) scaleY(.9)  scaleX(1.08) rotate(-4deg); opacity:.85; }
-    22%  { transform:translateX(4%)  scaleY(1.12) scaleX(.92)  rotate(3deg);  opacity:1;   }
-    46%  { transform:translateX(-3%) scaleY(.96)  scaleX(1.04) rotate(-2deg); opacity:.9;  }
-    70%  { transform:translateX(5%)  scaleY(1.15) scaleX(.9)   rotate(4deg);  opacity:1;   }
-    100% { transform:translateX(-5%) scaleY(.9)   scaleX(1.08) rotate(-4deg); opacity:.85; }
+    0%   { transform:translateX(-5%) scaleY(.9)  scaleX(1.08) rotate(-4deg); opacity:.9; }
+    22%  { transform:translateX(4%)  scaleY(1.12) scaleX(.92)  rotate(3deg);  opacity:1;  }
+    46%  { transform:translateX(-3%) scaleY(.96)  scaleX(1.04) rotate(-2deg); opacity:.95; }
+    70%  { transform:translateX(5%)  scaleY(1.15) scaleX(.9)   rotate(4deg);  opacity:1;  }
+    100% { transform:translateX(-5%) scaleY(.9)   scaleX(1.08) rotate(-4deg); opacity:.9; }
 }
 @media (prefers-reduced-motion: reduce){
     .collection-slot.is-unlocked::before,
     .collection-slot.is-unlocked::after{ animation:none; }
 }
-.slot-img{ width:100%; height:44px; object-fit:contain; }
+.slot-img{ width:100%; height:58px; object-fit:contain; position:relative; z-index:1; }
 .slot-lock{ font-size:19px; opacity:.7; }
 .slot-label{ font-size:10.5px; font-weight:700; letter-spacing:.02em; text-align:center; line-height:1.2; }
 
@@ -779,7 +781,7 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
 @media (max-width:480px){
     .stage-row{ gap:6px; }
     .collection-slot{ width:52px; height:52px; }
-    .slot-img{ height:30px; }
+    .slot-img{ height:40px; }
     .slot-label{ display:none; }
     .slot-lock{ font-size:15px; }
     .avatar-photo{ width:clamp(130px,48vw,170px); height:clamp(130px,48vw,170px); }
