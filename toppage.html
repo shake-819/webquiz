@@ -508,34 +508,70 @@ main{ position:relative; z-index:1; }
     color:var(--red-pen);
 }
 
-/* ===== 配布プリント（お知らせ） ===== */
+/* ===== 紹介（開発者・問題作成者） ===== */
 
-.notice-sheet{ padding:0 clamp(20px,6vw,56px) 80px clamp(64px,10vw,90px); }
+.team-sheet{ padding:0 clamp(20px,6vw,56px) 0 clamp(64px,10vw,90px); }
+.team-sheet:last-of-type{ padding-bottom:80px; }
 
-.notice-list{
+.team-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:18px;
     max-width:900px;
+}
+
+.team-card{
     background:var(--card-bg);
     border:1px solid var(--paper-line);
+    border-top:3px solid var(--sage);
     box-shadow:0 10px 24px var(--shadow);
+    padding:26px 20px 22px;
+    text-align:center;
+    transition:transform .15s ease, box-shadow .15s ease;
 }
-.notice-list ul{ list-style:none; }
-.notice-list li{
-    display:flex;
-    gap:14px;
-    align-items:baseline;
-    padding:16px 26px;
-    border-bottom:1px dashed var(--paper-line);
-    font-size:15px;
+.team-card:hover{ transform:translateY(-3px); box-shadow:0 16px 30px var(--shadow); }
+
+.team-sheet.creators-sheet .team-card{ border-top-color:var(--gold); }
+
+.team-card .team-photo{
+    width:84px;
+    height:84px;
+    border-radius:50%;
+    object-fit:cover;
+    margin:0 auto 14px;
+    border:2px solid var(--paper-line);
+    display:block;
+    background:var(--paper-line);
 }
-.notice-list li:last-child{ border-bottom:none; }
-.notice-list li .tag{
+
+.team-card h3{
+    font-family:"Zen Old Mincho", serif;
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:8px;
+}
+.team-card h3 a{
+    color:inherit;
+    text-decoration:none;
+}
+.team-card h3 a:hover{ text-decoration:underline; }
+.team-card .role{
     font-family:"Klee One", cursive;
-    font-size:12.5px;
+    font-size:11.5px;
+    font-weight:700;
     color:var(--sage);
     border:1px solid var(--sage);
-    border-radius:3px;
-    padding:2px 8px;
-    flex-shrink:0;
+    border-radius:4px;
+    padding:2px 9px;
+    display:inline-block;
+    margin-bottom:10px;
+}
+.team-sheet.creators-sheet .team-card .role{ color:var(--gold); border-color:var(--gold-soft,var(--gold)); }
+
+.team-card p{
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink-soft);
 }
 
 /* ===== フッター ===== */
@@ -971,14 +1007,39 @@ footer{
     </div>
 </section>
 
-<section class="sheet-section notice-sheet reveal">
-    <h2 class="section-title">配布プリント<span class="en">NOTICE</span></h2>
-    <div class="notice-list">
-        <ul>
-            <li><span class="tag">NEW</span>新しい問題を追加しました！</li>
-            <li><span class="tag">UPDATE</span>Premium機能をアップデートしました。</li>
-            <li><span class="tag">INFO</span>ランキング機能、公開中です。</li>
-        </ul>
+<section class="sheet-section team-sheet developers-sheet reveal">
+    <h2 class="section-title">開発者紹介<span class="en">DEVELOPERS</span></h2>
+    <div class="team-grid">
+        <div class="team-card">
+            <img class="team-photo" src="assets/avatars/programer.jpg" alt="開発者1">
+            <span class="role">DEVELOPER</span>
+            <h3><a href="profile.html?user=874b3df4-f031-40a9-b332-5106ad70118f">kanikama</a></h3>
+            <p>高校3年生　暇人developer</p>
+        </div>
+    </div>
+</section>
+
+<section class="sheet-section team-sheet creators-sheet reveal">
+    <h2 class="section-title">問題作成者紹介<span class="en">QUIZ CREATORS</span></h2>
+    <div class="team-grid">
+        <div class="team-card">
+            <img class="team-photo" src="assets/avatars/jpg" alt="問題作成者1">
+            <span class="role">CREATOR</span>
+            <h3><a href="profile.html?user=713009c7-dff1-49db-82cd-d9ed5dc3661b">Tai</a></h3>
+            <p>紹介文をここに入力してください。</p>
+        </div>
+        <div class="team-card">
+            <img class="team-photo" src="assets/avatars/" alt="問題作成者2">
+            <span class="role">CREATOR</span>
+            <h3><a href="profile.html?user=0078d59a-4cf1-4136-8975-4b97219f1fa3">katyo</a></h3>
+            <p>紹介文をここに入力してください。</p>
+        </div>
+        <div class="team-card">
+            <img class="team-photo" src="assets/avatars/jpg" alt="問題作成者3">
+            <span class="role">CREATOR</span>
+            <h3><a href="profile.html?user=4e32245e-304e-4277-ab92-f547833faf42">あつも</a></h3>
+            <p>紹介文をここに入力してください。</p>
+        </div>
     </div>
 </section>
 
