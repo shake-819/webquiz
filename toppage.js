@@ -113,3 +113,22 @@ document.getElementById("logout").addEventListener("click", async () => {
     location.href = "login.html";
 
 });
+
+// 紹介カードのフリップ（スマホ：画面中央に来たら裏返す）
+if (window.matchMedia("(hover: none)").matches) {
+
+    const teamCards = document.querySelectorAll(".team-card");
+
+    const flipObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            entry.target.classList.toggle("is-flipped", entry.isIntersecting);
+        });
+    }, {
+        root: null,
+        rootMargin: "-50% 0px -50% 0px",
+        threshold: 0
+    });
+
+    teamCards.forEach(card => flipObserver.observe(card));
+
+}
