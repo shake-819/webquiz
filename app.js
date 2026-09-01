@@ -596,42 +596,51 @@ async function sendChat() {
 
     if (!message) return;
 
-    const {
-        data: { user }
-    } =
-    await supabaseClient.auth.getUser();
-
-    const {
-        data: profile
-    }
-    =
-    await supabaseClient
-        .from("users")
-        .select("name, plan")
-        .eq("id", user.id)
-        .single();
-    if (profile.plan !== "premium") {
-
-        alert("Premiumプラン限定機能です");
-
-        return;
-
-    }
-
-    await supabaseClient
-        .from("chat_messages")
-        .insert({
-            user_id: user.id,
-            user_name: profile.name,
-            message: message,
-            grade: myGrade
-        });
+    // ★ここで即座に入力欄をクリア＆送信ボタンを無効化
     input.value = "";
-    loadChat();
-    // @AIメンションでAIが応答(AIはどの学年のチャットにも参加可能)
-    if (message.includes("@AI")) {
-        const question = message.replace(/@AI/gi, "").trim();
-        askAI(question || "こんにちは", myGrade);
+    const sendBtn = document.getElementById("sendChat");
+    if (sendBtn) sendBtn.disabled = true;
+
+    try {
+        const {
+            data: { user }
+        } =
+        await supabaseClient.auth.getUser();
+
+        const {
+            data: profile
+        }
+        =
+        await supabaseClient
+            .from("users")
+            .select("name, plan")
+            .eq("id", user.id)
+            .single();
+
+        if (profile.plan !== "premium") {
+            alert("Premiumプラン限定機能です");
+            return;
+        }
+
+        await supabaseClient
+            .from("chat_messages")
+            .insert({
+                user_id: user.id,
+                user_name: profile.name,
+                message: message,
+                grade: myGrade
+            });
+
+        loadChat();
+
+        // @AIメンションでAIが応答(AIはどの学年のチャットにも参加可能)
+        if (message.includes("@AI")) {
+            const question = message.replace(/@AI/gi, "").trim();
+            askAI(question || "こんにちは", myGrade);
+        }
+    } finally {
+        // ★処理が終わったら（成功でも失敗でも）ボタンを再び押せるようにする
+        if (sendBtn) sendBtn.disabled = false;
     }
 
 }
