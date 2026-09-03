@@ -15,9 +15,9 @@ const AVATAR_PRESETS = [
     { key: "avatar6", url: `${GITHUB_ASSETS_BASE}/avatars/avatar6.jpg` },
 
     // ↓ 特定ユーザー限定アバターの例。exclusiveTo にUUIDを入れて使う。
-    { key: "avatar_special", name: "限定アバター",
-        url: `${GITHUB_ASSETS_BASE}/avatars/avatar_special.jpg`,
-        exclusiveTo: ["ここにユーザーUUID"] },
+    { key: "avatar_special", name: "chatAI",
+        url: `${GITHUB_ASSETS_BASE}/avatars/chatai.png`,
+        exclusiveTo: ["d23c8281-7c28-4440-a335-a8c0d20c9442"] },
 
     // ↓ 「浮く・波打つ・水しぶき」の本格演出付きアバターの例。
     // front(キャラの透過PNG) と back(背景) を両方指定すると自動でこの演出になる。
