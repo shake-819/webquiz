@@ -732,6 +732,16 @@ function unlockAfterAnswerShown() {
 submitBtn?.addEventListener("click", submitAnswer);
 hintBtn?.addEventListener("click", showHint);
 nextBtn?.addEventListener("click", nextQuiz);
+
+// ボタンをクリックしたときに、回答欄(input)からカーソル(フォーカス)が
+// 外れてしまわないようにする。
+// ボタンは通常クリックすると自動的にフォーカスを奪うが、
+// mousedown時点でpreventDefaultしておくと、クリック自体は今まで通り効いたまま
+// フォーカス移動だけを止められる。
+[submitBtn, hintBtn, nextBtn, showAnswerBtn].forEach(btn => {
+    btn?.addEventListener("mousedown", (e) => e.preventDefault());
+});
+
 categorySelect?.addEventListener("change", () => {
     recentQuestions = [];
     nextQuiz();
