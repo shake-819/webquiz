@@ -73,7 +73,12 @@ async function checkLogin() {
         return;
     }
 
-    await setApiUrlByGrade(session.user.id);
+    const isVerified = await setApiUrlByGrade(session.user.id);
+
+    if (!isVerified) {
+        showNotVerifiedNotice();
+        return;
+    }
 
     // 学年が確定してから初めて問題を読み込む
     loadQuestions();
@@ -81,11 +86,21 @@ async function checkLogin() {
     loadChat();
 }
 
+// 未認証（verify=trueでない）ユーザーには問題を読み込ませない。
+// 著作権上、教科書由来の問題データは管理者が確認したユーザーにのみ表示する。
+function showNotVerifiedNotice() {
+    question.textContent =
+        "このアカウントはまだ利用が許可されていません。管理者の承認をお待ちください。";
+    category.textContent = "";
+    lockAfterAnswerShown();
+    if (categorySelect) categorySelect.innerHTML = '<option value="all">すべて</option>';
+}
+
 async function setApiUrlByGrade(userId) {
     const { data: profile, error } =
         await supabaseClient
             .from("users")
-            .select("grade")
+            .select("grade, verify")
             .eq("id", userId)
             .single();
 
@@ -93,12 +108,14 @@ async function setApiUrlByGrade(userId) {
         console.error("学年情報の取得に失敗しました", error);
         API_URL = API_URLS["中3"]; // フォールバック(必要に応じて変更)
         myGrade = "中3";
-        return;
+        return profile?.verify === true;
     }
 
     const grade = String(profile.grade).trim();
     API_URL = API_URLS[grade] || API_URLS["中3"];
     myGrade = API_URLS[grade] ? grade : "中3";
+
+    return profile.verify === true;
 }
 async function loadQuestions() {
 
