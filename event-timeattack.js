@@ -64,12 +64,19 @@ async function init() {
 async function loadQuestions() {
     const { data: profile, error } = await supabaseClient
         .from("users")
-        .select("grade")
+        .select("grade, verify")
         .eq("id", myId)
         .single();
 
+    // 未認証（verify=trueでない）ユーザーには教科書由来の問題を読み込ませない
+    if (error || !profile || profile.verify !== true) {
+        questions = [];
+        showNotVerifiedNotice();
+        return;
+    }
+
     let grade = "中3";
-    if (!error && profile && profile.grade && API_URLS[String(profile.grade).trim()]) {
+    if (profile.grade && API_URLS[String(profile.grade).trim()]) {
         grade = String(profile.grade).trim();
     }
 
@@ -80,6 +87,21 @@ async function loadQuestions() {
     } catch (err) {
         console.error(err);
         questions = [];
+    }
+}
+
+function showNotVerifiedNotice() {
+    const startBtn = document.getElementById("startBtn");
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.textContent = "利用が許可されていません";
+    }
+    const rules = document.querySelector("#startScreen .rules");
+    if (rules) {
+        rules.insertAdjacentHTML(
+            "beforebegin",
+            '<p style="color:#c0392b;">このアカウントはまだ利用が許可されていません。管理者の承認をお待ちください。</p>'
+        );
     }
 }
 
