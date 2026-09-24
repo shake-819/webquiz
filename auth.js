@@ -38,7 +38,8 @@ async function register() {
                 score: 0,
                 correct: 0,
                 wrong: 0,
-                plan: "free"
+                plan: "free",
+                verify: false
             });
 
     if (insertError) {
