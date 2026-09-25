@@ -110,6 +110,16 @@ function showNotVerifiedNotice() {
     category.textContent = "";
     lockAfterAnswerShown();
     if (categorySelect) categorySelect.innerHTML = '<option value="all">すべて</option>';
+
+    // メッセージを少し見せたあと、サインアウトしてログインページへ戻す
+    setTimeout(async () => {
+        try {
+            await supabaseClient.auth.signOut();
+        } catch (e) {
+            console.error("サインアウトエラー:", e);
+        }
+        location.href = "login.html";
+    }, 3000);
 }
 
 async function setApiUrlByGrade(userId) {
