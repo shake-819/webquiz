@@ -64,26 +64,42 @@ let categoryMap = {};
 checkLogin();
 
 async function checkLogin() {
-    const {
-        data: { session }
-    } = await supabaseClient.auth.getSession();
+    try {
+        const {
+            data: { session },
+            error: sessionError
+        } = await supabaseClient.auth.getSession();
 
-    if (!session) {
+        if (sessionError) {
+            // セッション取得自体に失敗した場合も未ログイン扱いにしてloginへ
+            console.error("セッション取得エラー:", sessionError);
+            location.href = "login.html";
+            return;
+        }
+
+        if (!session) {
+            location.href = "login.html";
+            return;
+        }
+
+        const isVerified = await setApiUrlByGrade(session.user.id);
+
+        if (!isVerified) {
+            showNotVerifiedNotice();
+            return;
+        }
+
+        // 学年が確定してから初めて問題を読み込む
+        loadQuestions();
+        loadBookmarks();
+        loadChat();
+    } catch (e) {
+        // supabaseClientが未定義(CDN読み込み失敗等)を含め、
+        // 何らかの例外で処理が止まった場合でも画面を固まらせず
+        // login.htmlへ逃がす
+        console.error("checkLoginで予期しないエラー:", e);
         location.href = "login.html";
-        return;
     }
-
-    const isVerified = await setApiUrlByGrade(session.user.id);
-
-    if (!isVerified) {
-        showNotVerifiedNotice();
-        return;
-    }
-
-    // 学年が確定してから初めて問題を読み込む
-    loadQuestions();
-    loadBookmarks();
-    loadChat();
 }
 
 // 未認証（verify=trueでない）ユーザーには問題を読み込ませない。
