@@ -1,9 +1,31 @@
-const API_URLS = {
-    "中3": "https://sheet2api.com/v1/29AXFCHHTfS7/3",
-    "高3": "https://sheet2api.com/v1/29AXFCHHTfS7/discord"
+// 学年ごとの問題テーブル名(Supabase)
+const QUESTION_TABLES = {
+    "中3": "questions_chu3",
+    "高3": "questions"
 };
 
-let API_URL = null;
+// Supabaseの問題テーブルから全件取得する(1回の上限1000行なのでページ分けする)
+async function fetchAllQuestions(tableName) {
+    const all = [];
+    const pageSize = 1000;
+
+    for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabaseClient
+            .from(tableName)
+            .select("*")
+            .order("id", { ascending: true })
+            .range(from, from + pageSize - 1);
+
+        if (error) throw error;
+
+        all.push(...data);
+        if (data.length < pageSize) break;
+    }
+
+    return all;
+}
+
+let QUESTION_TABLE = null;
 let myGrade = "中3"; // ログインユーザーの学年(チャットの絞り込みに使用)
 
 const category = document.getElementById("category");
@@ -132,28 +154,25 @@ async function setApiUrlByGrade(userId) {
 
     if (error || !profile || !profile.grade) {
         console.error("学年情報の取得に失敗しました", error);
-        API_URL = API_URLS["中3"]; // フォールバック(必要に応じて変更)
+        QUESTION_TABLE = QUESTION_TABLES["中3"]; // フォールバック(必要に応じて変更)
         myGrade = "中3";
         return profile?.verify === true;
     }
 
     const grade = String(profile.grade).trim();
-    API_URL = API_URLS[grade] || API_URLS["中3"];
-    myGrade = API_URLS[grade] ? grade : "中3";
+    QUESTION_TABLE = QUESTION_TABLES[grade] || QUESTION_TABLES["中3"];
+    myGrade = QUESTION_TABLES[grade] ? grade : "中3";
 
     return profile.verify === true;
 }
 async function loadQuestions() {
 
-    const res = await fetch(API_URL);
-    const data = await res.json();
-
-    if (Array.isArray(data))
-        questions = data;
-    else if (Array.isArray(data.rows))
-        questions = data.rows;
-    else
+    try {
+        questions = await fetchAllQuestions(QUESTION_TABLE);
+    } catch (err) {
+        console.error("問題の取得に失敗しました:", err);
         questions = [];
+    }
 
     // カテゴリ一覧を作成
     const categories = [...new Set(
