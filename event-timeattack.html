@@ -1,358 +1,372 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz Master | タイムアタッククイズ</title>
+// 学年ごとの問題テーブル名(Supabase)
+const QUESTION_TABLES = {
+    "中3": "questions_chu3",
+    "高3": "questions"
+};
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+// Supabaseの問題テーブルから全件取得する(1回の上限1000行なのでページ分けする)
+async function fetchAllQuestions(tableName) {
+    const all = [];
+    const pageSize = 1000;
 
-<style>
-:root{
-    --paper:       #F5F3EC;
-    --paper-line:  #DAD4C4;
-    --ink:         #232A35;
-    --ink-soft:    #6B7280;
-    --red-pen:     #C6423A;
-    --red-pen-soft:#E2857D;
-    --navy:        #2E3E5C;
-    --gold:        #B8912E;
-    --gold-soft:   #E4CB86;
-    --sage:        #52745A;
-    --card-bg:     #FFFFFE;
-    --shadow:      rgba(35,42,53,.10);
+    for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabaseClient
+            .from(tableName)
+            .select("*")
+            .order("id", { ascending: true })
+            .range(from, from + pageSize - 1);
+
+        if (error) throw error;
+
+        all.push(...data);
+        if (data.length < pageSize) break;
+    }
+
+    return all;
 }
 
-*{ margin:0; padding:0; box-sizing:border-box; }
+const TIME_LIMIT = 60;       // 制限時間（秒）
+const SKIP_PENALTY = 5;      // スキップ1回あたりのペナルティ（秒）
+const UNLOCK_SCORE = 15;     // 限定アバター解放に必要な正解数（profile.js側の値と合わせること）
 
-body{
-    font-family:"Zen Kaku Gothic New", sans-serif;
-    color:var(--ink);
-    background:
-        repeating-linear-gradient(
-            var(--paper) 0px, var(--paper) 35px,
-            var(--paper-line) 36px, var(--paper) 37px
+let myId = null;
+let questions = [];
+let currentQuestion = null;
+let recentQuestions = [];
+
+let remaining = TIME_LIMIT;
+let score = 0;
+let wrongCount = 0;
+let skipCount = 0;
+let timerHandle = null;
+let isPlaying = false;
+let bestScoreBefore = 0;
+
+const startScreen = document.getElementById("startScreen");
+const playScreen = document.getElementById("playScreen");
+const resultScreen = document.getElementById("resultScreen");
+
+const timerBox = document.getElementById("timerBox");
+const liveScoreEl = document.getElementById("liveScore");
+const qCategoryEl = document.getElementById("qCategory");
+const qTextEl = document.getElementById("qText");
+const flashEl = document.getElementById("flash");
+const answerInput = document.getElementById("answerInput");
+
+init();
+
+async function init() {
+    const {
+        data: { session }
+    } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+        location.href = "login.html";
+        return;
+    }
+    myId = session.user.id;
+
+    document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("skipBtn").addEventListener("click", skipQuestion);
+    document.getElementById("retireBtn").addEventListener("click", () => endGame(false));
+    document.getElementById("retryBtn").addEventListener("click", backToStart);
+    document.getElementById("homeBtn").addEventListener("click", () => location.href = "toppage.html");
+
+    answerInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.isComposing) {
+            e.preventDefault();
+            submitAnswer();
+        }
+    });
+
+    await loadQuestions();
+    await loadLeaderboard();
+}
+
+async function loadQuestions() {
+    const { data: profile, error } = await supabaseClient
+        .from("users")
+        .select("grade, verify")
+        .eq("id", myId)
+        .single();
+
+    // 未認証（verify=trueでない）ユーザーには教科書由来の問題を読み込ませない
+    if (error || !profile || profile.verify !== true) {
+        questions = [];
+        showNotVerifiedNotice();
+        return;
+    }
+
+    let grade = "中3";
+    if (profile.grade && QUESTION_TABLES[String(profile.grade).trim()]) {
+        grade = String(profile.grade).trim();
+    }
+
+    try {
+        questions = await fetchAllQuestions(QUESTION_TABLES[grade]);
+    } catch (err) {
+        console.error(err);
+        questions = [];
+    }
+}
+
+function showNotVerifiedNotice() {
+    const startBtn = document.getElementById("startBtn");
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.textContent = "利用が許可されていません";
+    }
+    const rules = document.querySelector("#startScreen .rules");
+    if (rules) {
+        rules.insertAdjacentHTML(
+            "beforebegin",
+            '<p style="color:#c0392b;">このアカウントはまだ利用が許可されていません。管理者の承認をお待ちください。</p>'
         );
-    min-height:100vh;
+    }
 }
 
-.back-link{
-    display:inline-block;
-    font-size:13.5px;
-    font-weight:700;
-    color:var(--ink-soft);
-    text-decoration:none;
-    margin:20px 0 0 20px;
-}
-.back-link:hover{ color:var(--red-pen); }
-
-.wrap{
-    width:92%;
-    max-width:720px;
-    margin:0 auto;
-    padding:20px 0 80px;
+function backToStart() {
+    resultScreen.style.display = "none";
+    startScreen.style.display = "block";
 }
 
-.event-sheet{
-    background:var(--card-bg);
-    border:1px solid var(--paper-line);
-    box-shadow:0 14px 34px var(--shadow);
-    padding:clamp(24px,5vw,44px);
+function startGame() {
+    if (questions.length === 0) {
+        alert("問題を読み込めませんでした。時間をおいてもう一度お試しください。");
+        return;
+    }
+
+    score = 0;
+    wrongCount = 0;
+    skipCount = 0;
+    remaining = TIME_LIMIT;
+    recentQuestions = [];
+    isPlaying = true;
+
+    startScreen.style.display = "none";
+    resultScreen.style.display = "none";
+    playScreen.style.display = "block";
+
+    updateScoreDisplay();
+    updateTimerDisplay();
+    nextQuestion();
+
+    timerHandle = setInterval(tick, 1000);
+    answerInput.value = "";
+    answerInput.focus();
 }
 
-.event-head{ text-align:center; margin-bottom:26px; }
-.event-head .eyebrow{
-    font-family:"Klee One", cursive;
-    font-size:13px;
-    color:var(--red-pen);
-    border:1px solid var(--red-pen-soft);
-    border-radius:4px;
-    padding:2px 12px;
-    display:inline-block;
-    transform:rotate(-2deg);
-    margin-bottom:10px;
-}
-.event-head h1{
-    font-family:"Zen Old Mincho", serif;
-    font-size:26px;
-}
-.event-head p{
-    font-size:13.5px;
-    color:var(--ink-soft);
-    margin-top:8px;
+function tick() {
+    remaining -= 1;
+    updateTimerDisplay();
+    if (remaining <= 0) {
+        remaining = 0;
+        updateTimerDisplay();
+        endGame(true);
+    }
 }
 
-button{
-    font-family:"Zen Kaku Gothic New", sans-serif;
-    cursor:pointer;
-    border-radius:2px;
+function updateTimerDisplay() {
+    timerBox.innerHTML = `${remaining}<span class="unit">秒</span>`;
+    timerBox.classList.toggle("is-low", remaining <= 10);
 }
 
-.btn-main{
-    font-weight:900;
-    font-size:15px;
-    color:#fff;
-    background:var(--red-pen);
-    border:none;
-    padding:14px 30px;
-    box-shadow:3px 3px 0 var(--ink);
-    transition:transform .15s ease, box-shadow .15s ease, opacity .2s;
-}
-.btn-main:hover:not(:disabled){ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
-.btn-main:disabled{ opacity:.4; cursor:not-allowed; }
-
-.btn-sub{
-    font-weight:700;
-    font-size:14px;
-    color:var(--ink);
-    background:transparent;
-    border:1px solid var(--paper-line);
-    padding:12px 22px;
-}
-.btn-sub:hover{ border-color:var(--red-pen); color:var(--red-pen); }
-
-/* ===== スタート画面 ===== */
-
-#startScreen{ text-align:center; }
-.rules{
-    text-align:left;
-    font-size:13px;
-    color:var(--ink-soft);
-    line-height:1.9;
-    max-width:460px;
-    margin:22px auto 30px;
-    padding:18px 22px;
-    background:var(--paper);
-    border:1px dashed var(--paper-line);
-}
-.rules li{ margin-left:1.1em; }
-
-/* ===== プレイ画面 ===== */
-
-#playScreen{ display:none; }
-
-.play-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
-    gap:12px;
-    flex-wrap:wrap;
+function updateScoreDisplay() {
+    liveScoreEl.textContent = score;
 }
 
-.timer-box{
-    font-family:"Zen Old Mincho", serif;
-    font-weight:700;
-    font-size:34px;
-    color:var(--red-pen);
-    background:var(--paper);
-    border:1.5px solid var(--paper-line);
-    padding:8px 22px;
-    line-height:1;
-    min-width:110px;
-    text-align:center;
-}
-.timer-box.is-low{ color:#fff; background:var(--red-pen); border-color:var(--red-pen); animation:pulse 1s infinite; }
-@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
-.timer-box .unit{ font-family:"Zen Kaku Gothic New",sans-serif; font-size:13px; margin-left:2px; }
+function nextQuestion() {
+    let available = questions.filter(q => !recentQuestions.includes(q.id));
+    if (available.length === 0) {
+        recentQuestions = [];
+        available = questions;
+    }
+    if (available.length === 0) {
+        qCategoryEl.textContent = "";
+        qTextEl.textContent = "出題できる問題がありません。";
+        currentQuestion = null;
+        return;
+    }
 
-.score-box{
-    text-align:right;
-    font-size:13px;
-    color:var(--ink-soft);
-}
-.score-box .num{
-    font-family:"Zen Old Mincho", serif;
-    font-size:26px;
-    font-weight:700;
-    color:var(--ink);
+    currentQuestion = available[Math.floor(Math.random() * available.length)];
+    recentQuestions.push(currentQuestion.id);
+    if (recentQuestions.length > 15) recentQuestions.shift();
+
+    qCategoryEl.textContent = `【${currentQuestion.category}】`;
+    qTextEl.textContent = currentQuestion.question;
+    answerInput.value = "";
+    flashEl.textContent = "";
+    flashEl.className = "flash";
 }
 
-.qcard{
-    background:var(--paper);
-    border:1px solid var(--paper-line);
-    padding:26px clamp(18px,4vw,32px);
-    margin-bottom:20px;
-    min-height:130px;
-}
-.qcard .cat{
-    font-size:12px;
-    font-weight:700;
-    color:var(--sage);
-    margin-bottom:10px;
-}
-.qcard .q{
-    font-size:clamp(17px,3.4vw,20px);
-    line-height:1.7;
-    font-weight:700;
+function judge(userAnswer, question) {
+    const ua = userAnswer.trim().toLowerCase();
+    const ca = String(question.answer).trim().toLowerCase();
+    const type = question.type || "normal";
+
+    if (type === "multi") {
+        return ca.split("|").includes(ua);
+    }
+    if (type === "unordered") {
+        const normalize = text =>
+            text.replace(/[、,]/g, " ").split(/\s+/).filter(Boolean).sort().join(" ").toLowerCase();
+        return normalize(ua) === normalize(ca);
+    }
+    return ua === ca;
 }
 
-.answer-row{ margin-bottom:18px; }
-.answer-row input{
-    width:100%;
-    font-family:"Zen Kaku Gothic New", sans-serif;
-    font-size:16px;
-    padding:14px 16px;
-    border:1.5px solid var(--paper-line);
-    background:#fff;
-    color:var(--ink);
-}
-.answer-row input:focus{ outline:none; border-color:var(--red-pen); }
+function submitAnswer() {
+    if (!isPlaying || !currentQuestion) return;
 
-.flash{
-    text-align:center;
-    min-height:22px;
-    font-weight:700;
-    font-size:14px;
-    margin-bottom:14px;
-}
-.flash.correct{ color:var(--sage); }
-.flash.wrong{ color:var(--red-pen); }
+    const correct = judge(answerInput.value, currentQuestion);
 
-.play-actions{
-    display:flex;
-    justify-content:center;
-    gap:14px;
+    if (correct) {
+        score += 1;
+        updateScoreDisplay();
+        flashEl.textContent = "⭕ 正解！";
+        flashEl.className = "flash correct";
+        nextQuestion();
+    } else {
+        wrongCount += 1;
+        flashEl.textContent = "❌ 不正解！もう一度入力してみよう";
+        flashEl.className = "flash wrong";
+        answerInput.value = "";
+    }
+
+    answerInput.focus();
 }
 
-/* ===== 結果画面 ===== */
+function skipQuestion() {
+    if (!isPlaying) return;
 
-#resultScreen{ display:none; text-align:center; }
-#resultScreen .result-score{
-    font-family:"Zen Old Mincho", serif;
-    font-size:52px;
-    font-weight:700;
-    color:var(--red-pen);
-    margin:14px 0 4px;
-}
-#resultScreen .result-score .unit{ font-size:16px; color:var(--ink-soft); font-family:"Zen Kaku Gothic New",sans-serif; }
-#resultScreen .best-note{ font-size:13px; color:var(--ink-soft); margin-bottom:6px; }
-#resultScreen .unlock-note{
-    display:none;
-    margin:16px auto 0;
-    max-width:420px;
-    font-size:13.5px;
-    color:var(--gold);
-    background:#FBF6E7;
-    border:1px solid var(--gold-soft);
-    padding:12px 16px;
+    skipCount += 1;
+    remaining = Math.max(0, remaining - SKIP_PENALTY);
+    updateTimerDisplay();
+    flashEl.textContent = `⏭️ スキップ（-${SKIP_PENALTY}秒）`;
+    flashEl.className = "flash";
+
+    if (remaining <= 0) {
+        endGame(true);
+        return;
+    }
+
+    nextQuestion();
+    answerInput.focus();
 }
 
-.leader-title{
-    font-family:"Zen Old Mincho", serif;
-    font-size:17px;
-    margin:30px 0 12px;
-    text-align:left;
-}
-#leaderboard{ list-style:none; margin-bottom:24px; text-align:left; }
-#leaderboard li{
-    display:flex;
-    justify-content:space-between;
-    padding:11px 4px;
-    border-bottom:1px dashed var(--paper-line);
-    font-size:14.5px;
-}
-#leaderboard li:last-child{ border-bottom:none; }
-#leaderboard li.empty{ color:var(--ink-soft); justify-content:center; }
+async function endGame(timeUp) {
+    if (!isPlaying) return;
+    isPlaying = false;
 
-.result-actions{
-    display:flex;
-    justify-content:center;
-    gap:14px;
-    flex-wrap:wrap;
+    clearInterval(timerHandle);
+    timerHandle = null;
+
+    playScreen.style.display = "none";
+    resultScreen.style.display = "block";
+
+    document.getElementById("finalScore").textContent = score;
+
+    await saveResults(!timeUp); // timeUp=false のときはリタイアによる終了
+    await loadLeaderboard();
 }
 
-.event-foot-rules{
-    font-size:12.5px;
-    color:var(--ink-soft);
-    line-height:1.9;
-    padding-top:20px;
-    margin-top:26px;
-    border-top:1px dashed var(--paper-line);
+// プレイ1回分の記録を timeattack_runs に保存し、
+// 自己ベストなら timeattack_scores（ランキング用）も更新する
+async function saveResults(retired) {
+    // ① 今回のプレイ内容をそのまま履歴として保存
+    const { error: runError } = await supabaseClient
+        .from("timeattack_runs")
+        .insert({
+            user_id: myId,
+            correct_count: score,
+            wrong_count: wrongCount,
+            skip_count: skipCount,
+            score: score,
+            retired: retired
+        });
+    if (runError) console.error(runError);
+
+    // ② 自己ベスト（ランキング用）の更新判定
+    const { data: existing, error: fetchError } = await supabaseClient
+        .from("timeattack_scores")
+        .select("best_score")
+        .eq("user_id", myId)
+        .maybeSingle();
+
+    if (fetchError) {
+        console.error(fetchError);
+        return;
+    }
+
+    bestScoreBefore = existing ? existing.best_score : 0;
+    const bestNoteEl = document.getElementById("bestNote");
+    const unlockNoteEl = document.getElementById("unlockNote");
+
+    if (!existing) {
+        const { error } = await supabaseClient
+            .from("timeattack_scores")
+            .insert({ user_id: myId, best_score: score });
+        if (error) console.error(error);
+        bestNoteEl.textContent = `自己ベストを更新しました！（今回: ${score}問）`;
+    } else if (score > existing.best_score) {
+        const { error } = await supabaseClient
+            .from("timeattack_scores")
+            .update({ best_score: score, updated_at: new Date().toISOString() })
+            .eq("user_id", myId);
+        if (error) console.error(error);
+        bestNoteEl.textContent = `自己ベストを更新しました！（${existing.best_score}問 → ${score}問）`;
+    } else {
+        bestNoteEl.textContent = `自己ベスト: ${existing.best_score}問（今回: ${score}問）`;
+    }
+
+    const finalBest = Math.max(bestScoreBefore, score);
+    if (finalBest >= UNLOCK_SCORE) {
+        unlockNoteEl.style.display = "block";
+        unlockNoteEl.textContent = `🎁 ${UNLOCK_SCORE}問以上正解を達成！プロフィールの「画像を変更」から限定アバターを選べます。`;
+    } else {
+        unlockNoteEl.style.display = "none";
+    }
 }
-.event-foot-rules li{ margin-left:1.1em; }
-</style>
-</head>
 
-<body>
+async function loadLeaderboard() {
+    const { data: top, error } = await supabaseClient
+        .from("timeattack_scores")
+        .select("user_id,best_score")
+        .order("best_score", { ascending: false })
+        .limit(10);
 
-<a class="back-link" href="toppage.html">← ホームに戻る</a>
+    if (error || !top) {
+        console.error(error);
+        return;
+    }
 
-<main class="wrap">
-    <div class="event-sheet">
+    const ids = top.map(t => t.user_id);
+    let names = {};
+    if (ids.length > 0) {
+        const { data: users } = await supabaseClient
+            .from("users")
+            .select("id,name")
+            .in("id", ids);
+        (users || []).forEach(u => { names[u.id] = u.name; });
+    }
 
-        <div class="event-head">
-            <span class="eyebrow">NEW EVENT</span>
-            <h1>⏱️ タイムアタッククイズ</h1>
-            <p>制限時間60秒、全カテゴリからランダム出題。たくさん正解してランキング上位を目指そう。</p>
-        </div>
+    const medals = ["🥇", "🥈", "🥉"];
+    const list = document.getElementById("leaderboard");
+    list.innerHTML = "";
 
-        <!-- ===== スタート画面 ===== -->
-        <div id="startScreen">
-            <ul class="rules">
-                <li>制限時間は60秒。全カテゴリからランダムに出題されます。</li>
-                <li>答えを入力して<b>Enterキー</b>で解答。<b>正解すると次の問題</b>に進みます（不正解の場合はもう一度入力できます）。</li>
-                <li><b>スキップ</b>すると次の問題に進みますが、残り時間が5秒減ります。</li>
-                <li><b>リタイア</b>するとその時点で終了し、結果が記録されます。</li>
-                <li>正解数に応じてランキングに掲載され、一定数以上正解すると限定アバターが手に入ります。</li>
-            </ul>
-            <button class="btn-main" id="startBtn">スタート</button>
-        </div>
+    if (top.length === 0) {
+        list.innerHTML = `<li class="empty">まだ誰も挑戦していません</li>`;
+        return;
+    }
 
-        <!-- ===== プレイ画面 ===== -->
-        <div id="playScreen">
-            <div class="play-top">
-                <div class="timer-box" id="timerBox">60<span class="unit">秒</span></div>
-                <div class="score-box">正解数<br><span class="num" id="liveScore">0</span></div>
-            </div>
-
-            <div class="qcard">
-                <div class="cat" id="qCategory">【】</div>
-                <div class="q" id="qText">読み込み中...</div>
-            </div>
-
-            <div class="flash" id="flash"></div>
-
-            <div class="answer-row">
-                <input type="text" id="answerInput" placeholder="答えを入力してEnter" autocomplete="off">
-            </div>
-
-            <div class="play-actions">
-                <button class="btn-sub" id="skipBtn">スキップ（-5秒）</button>
-                <button class="btn-sub" id="retireBtn">リタイア</button>
-            </div>
-        </div>
-
-        <!-- ===== 結果画面 ===== -->
-        <div id="resultScreen">
-            <p style="color:var(--ink-soft);font-size:13px;">今回の記録</p>
-            <p class="result-score"><span id="finalScore">0</span><span class="unit">問正解</span></p>
-            <p class="best-note" id="bestNote"></p>
-            <p class="unlock-note" id="unlockNote"></p>
-
-            <h2 class="leader-title">🏆 正解数ランキング TOP10</h2>
-            <ul id="leaderboard"></ul>
-
-            <div class="result-actions">
-                <button class="btn-main" id="retryBtn">もう一度挑戦</button>
-                <button class="btn-sub" id="homeBtn">ホームに戻る</button>
-            </div>
-        </div>
-
-        <ul class="event-foot-rules">
-            <li>スキップ・リタイアは正答率など他の成績データには影響しません（このイベント専用の記録です）</li>
-            <li>ランキングは自己ベストの正解数で競います</li>
-        </ul>
-
-    </div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js"></script>
-<script src="idle-logout.js"></script>
-<script src="event-timeattack.js"></script>
-
-</body>
-</html>
+    top.forEach((t, i) => {
+        list.innerHTML += `
+            <li>
+                <a class="rank-name-link" style="color:inherit;text-decoration:none;" href="profile.html?user=${t.user_id}">
+                    ${medals[i] || `${i + 1}位`} ${names[t.user_id] || "名前未設定"}
+                </a>
+                <span>${t.best_score}問</span>
+            </li>
+        `;
+    });
+}
