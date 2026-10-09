@@ -1,7 +1,29 @@
-const API_URLS = {
-    "中3": "https://sheet2api.com/v1/29AXFCHHTfS7/3",
-    "高3": "https://sheet2api.com/v1/29AXFCHHTfS7/discord"
+// 学年ごとの問題テーブル名(Supabase)
+const QUESTION_TABLES = {
+    "中3": "questions_chu3",
+    "高3": "questions"
 };
+
+// Supabaseの問題テーブルから全件取得する(1回の上限1000行なのでページ分けする)
+async function fetchAllQuestions(tableName) {
+    const all = [];
+    const pageSize = 1000;
+
+    for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabaseClient
+            .from(tableName)
+            .select("*")
+            .order("id", { ascending: true })
+            .range(from, from + pageSize - 1);
+
+        if (error) throw error;
+
+        all.push(...data);
+        if (data.length < pageSize) break;
+    }
+
+    return all;
+}
 
 const TIME_LIMIT = 60;       // 制限時間（秒）
 const SKIP_PENALTY = 5;      // スキップ1回あたりのペナルティ（秒）
@@ -76,14 +98,12 @@ async function loadQuestions() {
     }
 
     let grade = "中3";
-    if (profile.grade && API_URLS[String(profile.grade).trim()]) {
+    if (profile.grade && QUESTION_TABLES[String(profile.grade).trim()]) {
         grade = String(profile.grade).trim();
     }
 
     try {
-        const res = await fetch(API_URLS[grade]);
-        const data = await res.json();
-        questions = Array.isArray(data) ? data : (Array.isArray(data.rows) ? data.rows : []);
+        questions = await fetchAllQuestions(QUESTION_TABLES[grade]);
     } catch (err) {
         console.error(err);
         questions = [];
