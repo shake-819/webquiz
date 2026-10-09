@@ -39,6 +39,13 @@ answer.addEventListener("keydown", (e) => {
         submitAnswer();
     }
 });
+// Ctrl+Shift+H でヒントを表示（ヒントボタンと同じ処理）
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === "KeyH" && !e.isComposing) {
+        e.preventDefault();
+        if (hintBtn && !hintBtn.disabled) showHint();
+    }
+});
 
 // 採点マーク（◯/✓）を解答欄の横に表示する
 const markOverlay = document.getElementById("markOverlay");
