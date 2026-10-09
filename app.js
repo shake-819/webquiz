@@ -46,6 +46,13 @@ document.addEventListener("keydown", (e) => {
         if (hintBtn && !hintBtn.disabled) showHint();
     }
 });
+// Ctrl+Shift+S でブックマーク登録/解除（Premium限定の判定は toggleBookmark 内）
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === "KeyS" && !e.isComposing && !e.repeat) {
+        e.preventDefault();
+        toggleBookmark();
+    }
+});
 
 // 採点マーク（◯/✓）を解答欄の横に表示する
 const markOverlay = document.getElementById("markOverlay");
