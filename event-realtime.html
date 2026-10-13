@@ -570,6 +570,7 @@ let skipPending = false;
 let mySkipSeq = 0;                    // 自分がスキップ投票した問題の seq
 let skipVote = null;                  // { seq, voted, total }
 let pingPending = false;
+let accessToken = null;               // ページを閉じる瞬間の「退室」連絡に使う(下の pagehide)
 
 const $ = (id) => document.getElementById(id);
 
@@ -597,6 +598,10 @@ async function init() {
         return;
     }
     myId = session.user.id;
+    accessToken = session.access_token;
+    supabaseClient.auth.onAuthStateChange((_event, sess) => {
+        if (sess && sess.access_token) accessToken = sess.access_token;
+    });
 
     answerBtn.addEventListener("click", submitAnswer);
     $("leaveBtn").addEventListener("click", leaveRoom);
@@ -618,8 +623,29 @@ async function init() {
             resync();
         }
     });
+    // ページを閉じる・離れるとき: 在室から外し、Realtime の接続も切る。
+    // (閉じる途中でも送れるよう keepalive で送る。失敗しても、心拍が止まれば40秒で自動的に外れる)
     window.addEventListener("pagehide", () => {
+        if (currentCategory && accessToken) {
+            try {
+                fetch(`${SUPABASE_URL}/rest/v1/rpc/rt_leave`, {
+                    method: "POST",
+                    keepalive: true,
+                    headers: {
+                        "Content-Type": "application/json",
+                        apikey: SUPABASE_KEY,
+                        Authorization: `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({ p_category: currentCategory })
+                }).catch(() => {});
+            } catch (e) { /* 何もしない */ }
+        }
         if (channel) supabaseClient.removeChannel(channel);
+    });
+
+    // 「戻る」ボタン等で、切断済みのページがそのまま復元された場合は読み込み直す
+    window.addEventListener("pageshow", (e) => {
+        if (e.persisted) location.reload();
     });
 
     // 操作があったら「最後に動いた時刻」を更新(警告中なら警告を消す)
