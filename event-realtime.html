@@ -421,6 +421,18 @@ button:disabled:hover{ transform:none; }
 .answer-row #answerInput{ flex:1; }
 .answer-row .btn-stamp{ flex:0 0 auto; padding:12px 18px; }
 
+.hint-box{
+    font-size:14.5px;
+    line-height:1.8;
+    color:var(--navy);
+    background:#EEF1F6;
+    border:1px dashed var(--navy);
+    padding:10px 14px;
+    margin:6px 0 14px;
+    display:none;
+    letter-spacing:.08em;
+}
+
 .last-result{
     font-size:13.5px;
     line-height:1.8;
@@ -458,6 +470,9 @@ button:disabled:hover{ transform:none; }
                 <li>最初に正解した人に得点が1点入り、全員が次の問題へ進みます</li>
                 <li>不正解でもペナルティはなく、何度でも答え直せます</li>
                 <li>30秒たっても誰も正解しないと、答えを発表して次の問題へ進みます</li>
+                <li>「ヒントを見る」は自分にだけ表示されます(答えの最初の1文字だけ表示されます)</li>
+                <li>「スキップ」は、いま部屋にいる全員が押すと次の問題へ進みます</li>
+                <li>1分間なにも操作しないと、自動で部屋から退出します</li>
             </ul>
             <div id="categoryList" class="cat-grid"></div>
         </div>
@@ -491,8 +506,13 @@ button:disabled:hover{ transform:none; }
             </div>
 
             <div class="flash" id="flash"></div>
+            <div class="hint-box" id="hintBox"></div>
             <div class="last-result" id="lastResult"></div>
 
+            <div class="btn-row btn-row--sub">
+                <button id="hintBtn" class="btn-outline btn-navy">💡 ヒントを見る</button>
+                <button id="skipBtn" class="btn-outline">⏭️ スキップ</button>
+            </div>
             <div class="btn-row btn-row--sub">
                 <button id="leaveBtn" class="btn-outline">カテゴリ選択に戻る</button>
             </div>
@@ -534,6 +554,23 @@ let pendingAnswer = false;
 let skipHandledKey = "";  // 同じ状態で rt_skip を何度も呼ばないための印
 let flashTimer = null;
 
+// ---- アイドル退出 ----
+// 部屋の中で一定時間なにも操作がなければ、カテゴリ選択画面へ戻す
+const IDLE_KICK_MS = 60 * 1000;   // この時間なにも操作しないと退室
+const IDLE_WARN_MS = 15 * 1000;       // 退室のこの時間前から警告を出す
+let lastActiveAt = Date.now();
+let idleWarned = false;
+
+// ---- ヒント / スキップ / 在室 ----
+const ACTIVE_WINDOW_MS = 45 * 1000;   // 最後の操作からこの時間以内なら「いる」として心拍を送る
+const PING_INTERVAL_MS = 15 * 1000;   // 心拍の間隔(サーバーは40秒止まると人数から外す)
+let hintText = "";                    // この問題で見たヒント(本人のみ。問題が変わると消える)
+let hintPending = false;
+let skipPending = false;
+let mySkipSeq = 0;                    // 自分がスキップ投票した問題の seq
+let skipVote = null;                  // { seq, voted, total }
+let pingPending = false;
+
 const $ = (id) => document.getElementById(id);
 
 const noticeEl = $("notice");
@@ -547,6 +584,9 @@ const answerInput = $("answerInput");
 const answerBtn = $("answerBtn");
 const flashEl = $("flash");
 const lastResultEl = $("lastResult");
+const hintBox = $("hintBox");
+const hintBtn = $("hintBtn");
+const skipBtn = $("skipBtn");
 
 init();
 
@@ -560,6 +600,8 @@ async function init() {
 
     answerBtn.addEventListener("click", submitAnswer);
     $("leaveBtn").addEventListener("click", leaveRoom);
+    hintBtn.addEventListener("click", requestHint);
+    skipBtn.addEventListener("click", requestSkip);
 
     answerInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.isComposing) {
@@ -580,7 +622,13 @@ async function init() {
         if (channel) supabaseClient.removeChannel(channel);
     });
 
+    // 操作があったら「最後に動いた時刻」を更新(警告中なら警告を消す)
+    ["click", "keydown", "touchstart", "mousemove", "input"].forEach((evt) => {
+        document.addEventListener(evt, markActive, { passive: true });
+    });
+
     setInterval(tick, 200);
+    setInterval(heartbeat, PING_INTERVAL_MS);
 
     await loadCategories();
 }
@@ -636,6 +684,8 @@ async function joinRoom(category) {
         if (error || !data || !data.ok) throw error || new Error("join failed");
 
         currentCategory = category;
+        lastActiveAt = Date.now();
+        idleWarned = false;
         myPoints = data.my_points || 0;
         st = null;
         applyState(data.state, true);
@@ -651,6 +701,7 @@ async function joinRoom(category) {
         roomScreen.style.display = "block";
         render();
         answerInput.focus();
+        sendPing(); // 「いま部屋にいる」ことをサーバーへ伝える
     } catch (err) {
         console.error(err);
         if (channel) {
@@ -676,6 +727,7 @@ async function openChannel(category) {
     const ch = supabaseClient.channel(topic, { config: { private: true } });
 
     ch.on("broadcast", { event: "next" }, ({ payload }) => onNext(payload));
+    ch.on("broadcast", { event: "skipvote" }, ({ payload }) => onSkipVote(payload));
 
     await new Promise((resolve, reject) => {
         let first = true;
@@ -703,8 +755,15 @@ async function openChannel(category) {
 }
 
 async function leaveRoom() {
+    const leftCategory = currentCategory;
     currentCategory = null;
     st = null;
+    hintText = "";
+    skipVote = null;
+    if (leftCategory) {
+        // 在室から外す(失敗しても、心拍が止まれば40秒で自動的に外れる)
+        Promise.resolve(supabaseClient.rpc("rt_leave", { p_category: leftCategory })).catch(() => {});
+    }
     if (channel) {
         await supabaseClient.removeChannel(channel);
         channel = null;
@@ -736,7 +795,12 @@ function applyState(s, force) {
     if (!s) return false;
     if (!force && st && s.ver <= st.ver) return false;
 
+    const newQuestion = !st || st.seq !== s.seq;
     st = { seq: s.seq, ver: s.ver, question: s.question, category: s.category };
+    if (newQuestion) {
+        hintText = "";   // ヒントは問題ごとにリセット
+        skipVote = null; // スキップ投票もリセット
+    }
     // 残り時間は「ミリ秒」で届く。端末の時計とサーバーの時計のずれを避けるため
     phaseEndsAt = Date.now() + (s.ms || 0);
     return true;
@@ -749,7 +813,7 @@ function onNext(p) {
         const who = p.winner === myId ? "あなた" : `${p.winner_name || "だれか"}さん`;
         showLastResult(`⭕ ${who}が正解！ 答え：${p.correct_answer}`);
     } else {
-        showLastResult(`⏭️ 時間切れ。答え：${p.correct_answer}`);
+        showLastResult(`⏭️ 次の問題へ(時間切れ／スキップ)。答え：${p.correct_answer}`);
     }
 
     applyState(p.state, true);
@@ -766,6 +830,25 @@ function render() {
     qCategoryEl.textContent = `【${st.category || currentCategory}】`;
     qTextEl.textContent = st.question || "";
     updateTimer();
+    renderExtras();
+}
+
+// ヒント表示とスキップボタンの見た目
+function renderExtras() {
+    if (hintText) {
+        hintBox.textContent = `💡 ヒント：${hintText}`;
+        hintBox.style.display = "block";
+    } else {
+        hintBox.style.display = "none";
+    }
+    hintBtn.disabled = hintPending || !!hintText;
+    hintBtn.textContent = hintText ? "💡 ヒント表示中" : "💡 ヒントを見る";
+
+    const v = st && skipVote && skipVote.seq === st.seq ? skipVote : null;
+    const voted = !!st && mySkipSeq === st.seq;
+    const count = v ? `（${v.voted}/${v.total}）` : "";
+    skipBtn.textContent = voted ? `⏭️ スキップ投票済み${count}` : `⏭️ スキップ${count}`;
+    skipBtn.disabled = skipPending || voted;
 }
 
 function updateTimer() {
@@ -814,10 +897,144 @@ function renderTop(top) {
     });
 }
 
+// ---------- アイドル退出 ----------
+
+function markActive() {
+    const wasAway = Date.now() - lastActiveAt > ACTIVE_WINDOW_MS;
+    lastActiveAt = Date.now();
+    if (wasAway && currentCategory) sendPing(); // 離席から戻ったら、すぐ在室に戻る
+    if (idleWarned) {
+        idleWarned = false;
+        showNotice("", false);
+    }
+}
+
+// 退室させたら true。tick() から 200ms ごとに呼ばれる
+function checkIdle() {
+    if (!currentCategory) return false;
+
+    const idle = Date.now() - lastActiveAt;
+
+    if (idle >= IDLE_KICK_MS) {
+        idleWarned = false;
+        leaveRoom();
+        showNotice("しばらく操作がなかったため、部屋から退出しました。もう一度カテゴリを選んでください。", true);
+        return true;
+    }
+
+    if (idle >= IDLE_KICK_MS - IDLE_WARN_MS) {
+        const remain = Math.ceil((IDLE_KICK_MS - idle) / 1000);
+        idleWarned = true;
+        showNotice(`操作がないため、あと${remain}秒で部屋から退出します。画面をタップするか何か入力すると続けられます。`, true);
+    }
+    return false;
+}
+
+// ---------- 在室(心拍) ----------
+
+// 操作している間だけ心拍を送る。離席すると止まり、サーバー側で人数から外れる
+function heartbeat() {
+    if (!currentCategory) return;
+    if (Date.now() - lastActiveAt > ACTIVE_WINDOW_MS) return;
+    sendPing();
+}
+
+async function sendPing() {
+    if (!currentCategory || pingPending) return;
+    pingPending = true;
+    const cat = currentCategory;
+    try {
+        const { data, error } = await supabaseClient.rpc("rt_ping", { p_category: cat });
+        if (error || !data || currentCategory !== cat) return;
+
+        if (data.advanced && data.next) {
+            onNext(data.next); // 離席者が外れて「残りの全員が投票済み」になった
+        } else if (data.ok && st && data.seq === st.seq && data.total != null) {
+            skipVote = { seq: data.seq, voted: data.voted, total: data.total };
+            renderExtras();
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        pingPending = false;
+    }
+}
+
+// ---------- ヒント ----------
+
+async function requestHint() {
+    if (!st || hintPending || hintText) return;
+    hintPending = true;
+    renderExtras();
+    const seq = st.seq;
+
+    try {
+        const { data, error } = await supabaseClient.rpc("rt_hint", {
+            p_category: currentCategory,
+            p_seq: seq
+        });
+        if (error || !data) throw error || new Error("hint failed");
+
+        if (!data.ok) {
+            // 取りに行っている間に次の問題へ進んだ
+            if (applyState(data.state, false)) answerInput.value = "";
+        } else if (st && st.seq === seq) {
+            hintText = data.hint || "ヒントはありません";
+        }
+    } catch (err) {
+        console.error(err);
+        showFlash("ヒントを取得できませんでした", "wrong");
+    } finally {
+        hintPending = false;
+        render();
+    }
+}
+
+// ---------- スキップ ----------
+
+async function requestSkip() {
+    if (!st || skipPending || mySkipSeq === st.seq) return;
+    skipPending = true;
+    renderExtras();
+    const seq = st.seq;
+
+    try {
+        const { data, error } = await supabaseClient.rpc("rt_skip_vote", {
+            p_category: currentCategory,
+            p_seq: seq
+        });
+        if (error || !data) throw error || new Error("skip vote failed");
+
+        if (data.state) {
+            // 投票している間に次の問題へ進んでいた
+            if (applyState(data.state, false)) answerInput.value = "";
+        } else if (data.changed && data.next) {
+            onNext(data.next); // 自分の1票で全員そろった
+        } else {
+            mySkipSeq = seq;
+            skipVote = { seq, voted: data.voted, total: data.total };
+        }
+    } catch (err) {
+        console.error(err);
+        showFlash("スキップできませんでした", "wrong");
+    } finally {
+        skipPending = false;
+        render();
+    }
+}
+
+// 他の人が投票したときの通知(Broadcast)
+function onSkipVote(p) {
+    if (!st || !p || p.seq !== st.seq) return;
+    skipVote = { seq: p.seq, voted: p.voted, total: p.total };
+    renderExtras();
+}
+
 // ---------- 時間切れの検知 ----------
 
 function tick() {
     if (!st || !currentCategory) return;
+    if (checkIdle()) return;
     updateTimer();
 
     if (Date.now() < phaseEndsAt) return;
