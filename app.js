@@ -1,32 +1,21 @@
-// 学年ごとの問題テーブル名(Supabase)
-const QUESTION_TABLES = {
-    "中3": "questions_chu3",
-    "高3": "questions"
-};
-
-// Supabaseの問題テーブルから全件取得する(1回の上限1000行なのでページ分けする)
-async function fetchAllQuestions(tableName) {
-    const all = [];
-    const pageSize = 1000;
-
-    for (let from = 0; ; from += pageSize) {
-        const { data, error } = await supabaseClient
-            .from(tableName)
-            .select("*")
-            .order("id", { ascending: true })
-            .range(from, from + pageSize - 1);
-
-        if (error) throw error;
-
-        all.push(...data);
-        if (data.length < pageSize) break;
-    }
-
-    return all;
-}
+// 問題の取得(fetchAllQuestions / QUESTION_TABLES)は question-cache.js にあります。
+// 同じタブ内では一定時間キャッシュされ、ページを開くたびの全件取得を避けます。
 
 let QUESTION_TABLE = null;
 let myGrade = "中3"; // ログインユーザーの学年(チャットの絞り込みに使用)
+let myPlan = "free"; // ログインユーザーのプラン(ブックマーク・チャットの可否判定に使用。ページ読み込み時に1回だけ取得)
+let myName = "";     // ログインユーザーの表示名(チャット送信に使用)
+let myUserId = null; // ログインユーザーのID(getSessionで取得。毎回サーバーに問い合わせない)
+
+// ログイン中のユーザーIDを返す。
+// auth.getUser() は毎回 Supabase の認証サーバーへ通信するが、getSession() は端末内で完結する。
+// (データの書き込み・読み取りの可否は、どちらの場合もサーバー側のRLSが判断する)
+async function currentUserId() {
+    if (myUserId) return myUserId;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    myUserId = session?.user?.id ?? null;
+    return myUserId;
+}
 
 const category = document.getElementById("category");
 const question = document.getElementById("question");
@@ -118,6 +107,7 @@ async function checkLogin() {
             return;
         }
 
+        myUserId = session.user.id;
         const isVerified = await setApiUrlByGrade(session.user.id);
 
         if (!isVerified) {
@@ -126,6 +116,7 @@ async function checkLogin() {
         }
 
         // 学年が確定してから初めて問題を読み込む
+        chatReady = true;
         loadQuestions();
         loadBookmarks();
         loadChat();
@@ -162,9 +153,12 @@ async function setApiUrlByGrade(userId) {
     const { data: profile, error } =
         await supabaseClient
             .from("users")
-            .select("grade, verify")
+            .select("grade, verify, plan, name")
             .eq("id", userId)
             .single();
+
+    myPlan = profile?.plan || "free";
+    myName = profile?.name || "";
 
     if (error || !profile || !profile.grade) {
         console.error("学年情報の取得に失敗しました", error);
@@ -316,192 +310,57 @@ function showHint() {
         `💡 ${hint}`;
 }
 // 正解判定
+// 判定・加点・Premiumの集計は、サーバー側の関数 submit_answer(sql/01_submit_answer.sql)で
+// 1回の通信にまとめて行う。端末が計算した点数をそのまま書き込むことはしない。
+let submitting = false;
+
 async function submitAnswer() {
 
-    if (!currentQuestion) return;
+    if (!currentQuestion || submitting) return;
 
-    const userAnswer =
-        answer.value.trim().toLowerCase();
+    // 通信中に次の問題へ切り替わっても、回答した問題・ヒント使用の有無がずれないよう先に控える
+    const answeredQuestion = currentQuestion;
+    const hintUsed = usedHint;
+    const userAnswer = answer.value;
 
-    const correctAnswer =
-        String(currentQuestion.answer)
-        .trim()
-        .toLowerCase();
+    submitting = true;
 
-    let correct = false;
-
-    const type =
-        currentQuestion.type || "normal";
-
-    if (type === "normal") {
-
-        correct =
-            userAnswer === correctAnswer;
-
-    }
-
-    else if (type === "multi") {
-
-        correct =
-            correctAnswer
-            .split("|")
-            .includes(userAnswer);
-
-    }
-
-    else if (type === "unordered") {
-
-        const normalize = text =>
-            text
-                .replace(/[、,]/g, " ")
-                .split(/\s+/)
-                .filter(Boolean)
-                .sort()
-                .join(" ")
-                .toLowerCase();
-
-        correct =
-            normalize(userAnswer) ===
-            normalize(correctAnswer);
-
-    }
-
-    // ----------------------------
-    // ここからSupabase更新
-    // ----------------------------
-
-    const {
-        data: { user }
-    } = await supabaseClient.auth.getUser();
-
-    if (!user) return;
-
-    // ユーザー情報取得
-    const { data: profile, error } =
-        await supabaseClient
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-    if (error || !profile) {
-        console.error(error);
-        return;
-    }
-    const newCorrect = profile.correct + (correct && !usedHint ? 1 : 0);
-
-    if (correct) {
-
-        result.textContent =
-            `⭕ 正解！\n現在${newCorrect}問正解`;
-
-        showMark(true);
-
-        answer.value = "";
-
-        setTimeout(() => {
-            nextQuiz();
-        }, 500);   // 0なら即切り替え、500なら0.5秒後
-
-    } else {
-
-        result.textContent = "❌ 不正解";
-        showMark(false);
-        answer.value = "";
-    }
-
-    // users更新
-    const updateData = {
-        score: profile.score + (correct && !usedHint ? 1 : 0),
-        correct: profile.correct + (correct && !usedHint ? 1 : 0),
-        wrong: profile.wrong + (correct ? 0 : 1)
-    };
-
-    await supabaseClient
-        .from("users")
-        .update(updateData)
-        .eq("id", user.id);
-
-    // Freeならここで終了
-    if (profile.plan === "free") return;
-
-    // ==========================
-    // Premium限定 科目集計
-    // ==========================
-
-    const { data: categoryStat } =
-        await supabaseClient
-        .from("user_category_stats")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("category", currentQuestion.category)
-        .maybeSingle();
-
-    if (!categoryStat) {
-
-        await supabaseClient
-            .from("user_category_stats")
-            .insert({
-                user_id: user.id,
-                category: currentQuestion.category,
-                correct: (correct && !usedHint) ? 1 : 0,
-                wrong: correct ? 0 : 1
+    try {
+        const { data, error } =
+            await supabaseClient.rpc("submit_answer", {
+                p_question_id: String(answeredQuestion.id),
+                p_answer: userAnswer,
+                p_used_hint: hintUsed
             });
 
-    } else {
+        if (error || !data) {
+            console.error(error);
+            result.textContent = "通信に失敗しました。もう一度お試しください";
+            return;
+        }
 
-        await supabaseClient
-            .from("user_category_stats")
-            .update({
-                correct:
-                    categoryStat.correct + ((correct && !usedHint) ? 1 : 0),
-                wrong:
-                    categoryStat.wrong + (correct ? 0 : 1),
-            })
-            .eq("id", categoryStat.id);
+        if (data.correct) {
 
-    }
+            result.textContent =
+                `⭕ 正解！\n現在${data.total_correct}問正解`;
 
-    // ==========================
-    // Premium限定 日別集計
-    // ==========================
+            showMark(true);
 
-    const today =
-        new Date().toISOString().slice(0, 10);
+            answer.value = "";
 
-    const { data: dailyStat } =
-        await supabaseClient
-        .from("user_daily_stats")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("date", today)
-        .eq("category", currentQuestion.category)
-        .maybeSingle();
+            setTimeout(() => {
+                nextQuiz();
+            }, 500);   // 0なら即切り替え、500なら0.5秒後
 
-    if (!dailyStat) {
+        } else {
 
-        await supabaseClient
-            .from("user_daily_stats")
-            .insert({
-                user_id: user.id,
-                date: today,
-                category: currentQuestion.category,
-                correct: (correct && !usedHint) ? 1 : 0,
-                wrong: correct ? 0 : 1
-            });
+            result.textContent = "❌ 不正解";
+            showMark(false);
+            answer.value = "";
+        }
 
-    } else {
-
-        await supabaseClient
-            .from("user_daily_stats")
-            .update({
-                correct:
-                    dailyStat.correct + ((correct && !usedHint) ? 1 : 0),
-                wrong:
-                    dailyStat.wrong + (correct ? 0 : 1)
-            })
-            .eq("id", dailyStat.id);
-
+    } finally {
+        submitting = false;
     }
 
 }
@@ -539,15 +398,13 @@ function ensureBookmarkStarElement() {
 
 // 起動時に自分のブックマーク一覧をまとめて取得
 async function loadBookmarks() {
-    const {
-        data: { user }
-    } = await supabaseClient.auth.getUser();
-    if (!user) return;
+    const userId = await currentUserId();
+    if (!userId) return;
 
     const { data, error } = await supabaseClient
         .from("user_bookmarks")
         .select("question_id")
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
     if (error) {
         console.error(error);
@@ -573,24 +430,11 @@ function renderBookmarkStar() {
 async function toggleBookmark() {
     if (!currentQuestion) return;
 
-    const {
-        data: { user }
-    } = await supabaseClient.auth.getUser();
-    if (!user) return;
+    const userId = await currentUserId();
+    if (!userId) return;
 
-    // プラン確認（Premium限定）
-    const { data: profile, error: profileError } = await supabaseClient
-        .from("users")
-        .select("plan")
-        .eq("id", user.id)
-        .single();
-
-    if (profileError) {
-        console.error(profileError);
-        return;
-    }
-
-    if (profile.plan !== "premium") {
+    // プラン確認（Premium限定。プランはページ読み込み時に取得済みのものを使う）
+    if (myPlan !== "premium") {
         alert("ブックマークはPremiumプラン限定機能です");
         return;
     }
@@ -602,7 +446,7 @@ async function toggleBookmark() {
         const { error } = await supabaseClient
             .from("user_bookmarks")
             .delete()
-            .eq("user_id", user.id)
+            .eq("user_id", userId)
             .eq("question_id", qid);
 
         if (error) {
@@ -614,7 +458,7 @@ async function toggleBookmark() {
         const { error } = await supabaseClient
             .from("user_bookmarks")
             .insert({
-                user_id: user.id,
+                user_id: userId,
                 question_id: qid,
                 category: currentQuestion.category,
                 question: currentQuestion.question,
@@ -630,39 +474,80 @@ async function toggleBookmark() {
 
     renderBookmarkStar();
 }
-async function loadChat() {
-    const {
-        data: { user }
-    } = await supabaseClient.auth.getUser();
+// ==========================
+// クラストーク(チャット)
+// 最初に最新30件を1回だけ取得し、あとは投稿のたびに届く内容をそのまま画面に追加する。
+// (以前は投稿があるたびに全員が30件を取り直していた → 20人いれば1投稿でAPI 20回)
+// ==========================
+const CHAT_MAX_MESSAGES = 30;
+let chatIds = []; // 画面に出しているメッセージのID(重複表示の防止)
+let chatReady = false; // ログイン・承認チェックを通るまでは、届いた投稿を画面に出さない
 
-    const { data } = await supabaseClient
+function chatKey(msg) {
+    return msg.id != null ? String(msg.id) : `${msg.user_id}|${msg.created_at}|${msg.message}`;
+}
+
+// 1件を画面の末尾に追加する。textContentで入れるので、メッセージ内のHTMLは実行されない
+async function appendChatMessage(msg) {
+    const key = chatKey(msg);
+    if (chatIds.includes(key)) return;
+    chatIds.push(key);
+
+    const userId = await currentUserId();
+    const messages = document.getElementById("messages");
+    const nearBottom =
+        messages.scrollHeight - messages.scrollTop - messages.clientHeight < 80;
+    const mine = msg.user_id === userId;
+
+    const wrap = document.createElement("div");
+    wrap.className = `message ${mine ? "mine" : "other"}`;
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "name";
+    nameEl.textContent = msg.user_name;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = msg.message;
+
+    wrap.appendChild(nameEl);
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+
+    // 古いものから消して件数を保つ
+    while (messages.children.length > CHAT_MAX_MESSAGES) {
+        messages.removeChild(messages.firstChild);
+        chatIds.shift();
+    }
+
+    if (mine || nearBottom) messages.scrollTop = messages.scrollHeight;
+}
+
+async function loadChat() {
+    // 最新30件を取る(新しい順に取ってから、古い順に並べ直す)
+    const { data, error } = await supabaseClient
         .from("chat_messages")
         .select("*")
         .eq("grade", myGrade)
-        .order("created_at", { ascending: true })
-        .limit(30);
-        
+        .order("created_at", { ascending: false })
+        .limit(CHAT_MAX_MESSAGES);
 
-    const messages =
-        document.getElementById("messages");
+    if (error || !data) {
+        console.error(error);
+        return;
+    }
 
-    messages.innerHTML = "";
+    document.getElementById("messages").innerHTML = "";
+    chatIds = [];
 
-    data.forEach(msg => {
+    for (const msg of data.reverse()) {
+        await appendChatMessage(msg);
+    }
 
-        const mine = msg.user_id === user.id;
-
-        messages.innerHTML += `
-            <div class="message ${mine ? "mine" : "other"}">
-                <div class="name">${msg.user_name}</div>
-                <div class="bubble">${msg.message}</div>
-            </div>
-        `;
-
-    });
+    const messages = document.getElementById("messages");
     messages.scrollTop = messages.scrollHeight;
-
 }
+
 async function sendChat() {
 
     const input =
@@ -678,36 +563,35 @@ async function sendChat() {
     if (sendBtn) sendBtn.disabled = true;
 
     try {
-        const {
-            data: { user }
-        } =
-        await supabaseClient.auth.getUser();
+        const userId = await currentUserId();
+        if (!userId) return;
 
-        const {
-            data: profile
-        }
-        =
-        await supabaseClient
-            .from("users")
-            .select("name, plan")
-            .eq("id", user.id)
-            .single();
-
-        if (profile.plan !== "premium") {
+        // プラン・名前はページ読み込み時に取得済み
+        if (myPlan !== "premium") {
             alert("Premiumプラン限定機能です");
             return;
         }
 
-        await supabaseClient
+        // 送ったメッセージをそのまま返してもらい、画面に追加する(取り直しはしない)
+        const { data: inserted, error } = await supabaseClient
             .from("chat_messages")
             .insert({
-                user_id: user.id,
-                user_name: profile.name,
+                user_id: userId,
+                user_name: myName,
                 message: message,
                 grade: myGrade
-            });
+            })
+            .select()
+            .single();
 
-        loadChat();
+        if (error) {
+            console.error(error);
+            input.value = message; // 送れなかった文章を戻す
+            alert("送信に失敗しました。もう一度お試しください");
+            return;
+        }
+
+        appendChatMessage(inserted);
 
         // @AIメンションでAIが応答(AIはどの学年のチャットにも参加可能)
         if (message.includes("@AI")) {
@@ -851,9 +735,9 @@ supabaseClient
 
     payload => {
 
-        // 自分の学年のチャットへの投稿のときだけ再読み込み
-        if (payload.new?.grade === myGrade) {
-            loadChat();
+        // 自分の学年のチャットへの投稿のときだけ、届いた内容をそのまま追加する(再取得しない)
+        if (chatReady && payload.new?.grade === myGrade) {
+            appendChatMessage(payload.new);
         }
 
     }
