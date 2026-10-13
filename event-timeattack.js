@@ -1,29 +1,4 @@
-// 学年ごとの問題テーブル名(Supabase)
-const QUESTION_TABLES = {
-    "中3": "questions_chu3",
-    "高3": "questions"
-};
-
-// Supabaseの問題テーブルから全件取得する(1回の上限1000行なのでページ分けする)
-async function fetchAllQuestions(tableName) {
-    const all = [];
-    const pageSize = 1000;
-
-    for (let from = 0; ; from += pageSize) {
-        const { data, error } = await supabaseClient
-            .from(tableName)
-            .select("*")
-            .order("id", { ascending: true })
-            .range(from, from + pageSize - 1);
-
-        if (error) throw error;
-
-        all.push(...data);
-        if (data.length < pageSize) break;
-    }
-
-    return all;
-}
+// 問題の取得(fetchAllQuestions / QUESTION_TABLES)は question-cache.js にあります(キャッシュ付き)。
 
 const TIME_LIMIT = 60;       // 制限時間（秒）
 const SKIP_PENALTY = 5;      // スキップ1回あたりのペナルティ（秒）
