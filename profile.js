@@ -48,13 +48,23 @@ const AVATAR_PRESETS = [
         petals: true,
         text: ["2学期中間", "王者"],
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
+
+    // ↓ 「時の王」：背景の中央にある時計の環だけがゆっくり回り、金の砂が降り、オーラが脈動する（文字なし）。
+    // timeKing:true で専用の描画（avt- 系クラス）になる。layered の front/back は両方必須。
+    { key: "avatar_timeking", name: "時の王",
+        layered: {
+            front: `${GITHUB_ASSETS_BASE}/avatars/timeking_front.webp`,
+            back:  `${GITHUB_ASSETS_BASE}/avatars/timeking_back.webp`
+        },
+        timeKing: true,
+        exclusiveTo: ["284c90b0-1890-4e42-8282-0bf21af46d87"] },
 ];
 
 
 const COLLECTION_ITEMS = [
      { key: "dice", name: "黄金のサイコロ",
        url: `${GITHUB_ASSETS_BASE}/collection/dice_gold.webp`,
-       exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f", "複数人いれば追加でUUID"] },
+       exclusiveTo: ["713009c7-dff1-49db-82cd-d9ed5dc3661b", "複数人いれば追加でUUID"] },
 ];
 const COLLECTION_SLOT_COUNT = 6; // 左右3枠ずつ
 
@@ -182,6 +192,28 @@ function renderAvatar(avatarKey) {
 
     const focus = preset.focus || "50% 50%";
 
+    // 「時の王」専用の描画。背景の時計の環だけを回し、砂・オーラを重ねる。
+    // 既存の .avl 系CSSには依存しない（avt- 系クラスで完結）。
+    if (preset.timeKing && preset.layered) {
+        el.style.background = "#fff";
+        el.innerHTML = `
+            <div class="avt">
+                <div class="avt-stage">
+                    <img class="avt-img" src="${preset.layered.back}" alt=""
+                         onerror="this.style.display='none'">
+                    <img class="avt-img avt-ring" src="${preset.layered.back}" alt=""
+                         onerror="this.style.display='none'">
+                    <div class="avt-aura"></div>
+                    <div class="avt-sand"></div>
+                    <img class="avt-img" src="${preset.layered.front}" alt="プロフィール画像"
+                         onerror="this.style.display='none'">
+                </div>
+            </div>
+        `;
+        avatarEffectTimers.push(startSandFall(el.querySelector(".avt-sand")));
+        return;
+    }
+
     if (preset.layered) {
         el.style.background = "#fff";
         const zoom = preset.zoom || 1;
@@ -268,6 +300,31 @@ function startPetalStorm(layer) {
 
     for (let i = 0; i < 5; i++) setTimeout(spawnPetal, i * 200);
     return setInterval(spawnPetal, 420);
+}
+
+// 「時の王」：金の砂を定期生成する（backとfrontの間のレイヤーで降る）
+function startSandFall(layer) {
+    if (!layer) return null;
+    // 落下距離はアバター枠の高さに合わせる（枠が変わっても自然に降る）
+    const fall = Math.round(layer.offsetHeight * 1.08) || 360;
+
+    function spawnGrain() {
+        if (document.hidden) return; // タブが裏にある間は生成しない（負荷対策）
+        const g = document.createElement("div");
+        g.className = "avt-grain";
+        const size = 2 + Math.random() * 3;
+        g.style.width = size + "px";
+        g.style.height = size * 2.2 + "px";
+        g.style.left = Math.random() * 100 + "%";
+        g.style.setProperty("--d", (Math.random() * 16 - 8) + "px");
+        g.style.setProperty("--fall", fall + "px");
+        g.style.animationDuration = (2.4 + Math.random() * 1.6) + "s";
+        layer.appendChild(g);
+        setTimeout(() => g.remove(), 4200);
+    }
+
+    for (let i = 0; i < 5; i++) setTimeout(spawnGrain, i * 150);
+    return setInterval(spawnGrain, 300);
 }
 
 // 下部キャプションを1文字ずつ、1秒間隔で表示する（すべて表示後は少し待って最初からループ）
