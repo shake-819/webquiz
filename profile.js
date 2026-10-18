@@ -194,18 +194,19 @@ function renderAvatar(avatarKey) {
 
     // 「時の王」専用の描画。背景の時計の環だけを回し、砂・オーラを重ねる。
     // 既存の .avl 系CSSには依存しない（avt- 系クラスで完結）。
+    // back / front は専用クラス（avt-back / avt-front）で z-index を明示している。
     if (preset.timeKing && preset.layered) {
         el.style.background = "#fff";
         el.innerHTML = `
             <div class="avt">
                 <div class="avt-stage">
-                    <img class="avt-img" src="${preset.layered.back}" alt=""
+                    <img class="avt-img avt-back" src="${preset.layered.back}" alt=""
                          onerror="this.style.display='none'">
                     <img class="avt-img avt-ring" src="${preset.layered.back}" alt=""
                          onerror="this.style.display='none'">
                     <div class="avt-aura"></div>
                     <div class="avt-sand"></div>
-                    <img class="avt-img" src="${preset.layered.front}" alt="プロフィール画像"
+                    <img class="avt-img avt-front" src="${preset.layered.front}" alt="プロフィール画像"
                          onerror="this.style.display='none'">
                 </div>
             </div>
