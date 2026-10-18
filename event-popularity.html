@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Master | 人気投票</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --paper:       #F5F3EC;
+    --paper-line:  #DAD4C4;
+    --ink:         #232A35;
+    --ink-soft:    #6B7280;
+    --red-pen:     #C6423A;
+    --navy:        #2E3E5C;
+    --gold:        #B8912E;
+    --gold-soft:   #E4CB86;
+    --sage:        #52745A;
+    --card-bg:     #FFFFFE;
+    --shadow:      rgba(35,42,53,.10);
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    color:var(--ink);
+    background:
+        repeating-linear-gradient(
+            var(--paper) 0px, var(--paper) 35px,
+            var(--paper-line) 36px, var(--paper) 37px
+        );
+    min-height:100vh;
+}
+
+.back-link{
+    display:inline-block;
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-decoration:none;
+    margin:20px 0 0 20px;
+}
+.back-link:hover{ color:var(--red-pen); }
+
+.wrap{
+    width:92%;
+    max-width:720px;
+    margin:0 auto;
+    padding:20px 0 80px;
+}
+
+.event-sheet{
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    box-shadow:0 14px 34px var(--shadow);
+    padding:clamp(24px,5vw,44px);
+}
+
+.event-head{ text-align:center; margin-bottom:28px; }
+.event-head .eyebrow{
+    font-family:"Klee One", cursive;
+    font-size:13px;
+    color:var(--gold);
+    border:1px solid var(--gold-soft);
+    border-radius:4px;
+    padding:2px 12px;
+    display:inline-block;
+    transform:rotate(-2deg);
+    margin-bottom:10px;
+}
+.event-head h1{ font-family:"Zen Old Mincho", serif; font-size:26px; }
+.event-head p{ font-size:13.5px; color:var(--ink-soft); margin-top:8px; }
+
+button{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    cursor:pointer;
+    border-radius:2px;
+}
+
+/* ===== バラの状況 ===== */
+.rose-panel{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    padding:18px 16px;
+    margin-bottom:10px;
+    text-align:center;
+}
+.rose-panel h3{ font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:4px; }
+.rose-panel .count{
+    font-family:"Zen Old Mincho", serif;
+    font-size:28px;
+    font-weight:700;
+    color:var(--ink);
+}
+.rose-panel .count.is-main{ color:var(--red-pen); }
+.rose-panel .unit{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:12.5px;
+    color:var(--ink-soft);
+}
+#untilNext{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:26px;
+}
+
+.toast{
+    min-height:22px;
+    text-align:center;
+    font-family:"Klee One", cursive;
+    font-size:14px;
+    margin-bottom:18px;
+}
+.toast.is-ok{ color:var(--sage); }
+.toast.is-err{ color:var(--red-pen); }
+
+/* ===== ユーザー一覧 ===== */
+.section-title{
+    font-family:"Zen Old Mincho", serif;
+    font-size:17px;
+    margin-bottom:12px;
+}
+
+#userSearch{
+    width:100%;
+    font-family:inherit;
+    font-size:14px;
+    padding:10px 12px;
+    border:1px solid var(--paper-line);
+    background:var(--card-bg);
+    margin-bottom:12px;
+}
+#userSearch:focus{ outline:2px solid var(--gold-soft); }
+
+.user-list{
+    list-style:none;
+    max-height:340px;
+    overflow-y:auto;
+    border:1px solid var(--paper-line);
+    margin-bottom:34px;
+}
+.user-list li{ border-bottom:1px dashed var(--paper-line); }
+.user-list li:last-child{ border-bottom:none; }
+.user-row{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    background:transparent;
+    border:none;
+    padding:12px 14px;
+    font-size:14.5px;
+    text-align:left;
+    color:var(--ink);
+}
+.user-row:hover:not(:disabled){ background:#FDF1EF; }
+.user-row .name{ font-weight:700; word-break:break-all; }
+.user-row .got{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
+.user-row:disabled{ cursor:not-allowed; color:var(--ink-soft); background:var(--paper); }
+.user-row .me-tag{
+    font-size:11px;
+    color:var(--gold);
+    border:1px solid var(--gold-soft);
+    border-radius:3px;
+    padding:0 6px;
+    margin-left:6px;
+}
+.user-list .empty{ padding:18px; text-align:center; color:var(--ink-soft); font-size:13.5px; }
+
+/* ===== ランキング ===== */
+.rank-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+    margin-bottom:26px;
+}
+@media (max-width:560px){ .rank-grid{ grid-template-columns:1fr; } }
+
+.rank-title{
+    font-family:"Zen Old Mincho", serif;
+    font-size:15.5px;
+    margin-bottom:8px;
+}
+.rank-list{ list-style:none; }
+.rank-list li{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 4px;
+    border-bottom:1px dashed var(--paper-line);
+    font-size:14px;
+}
+.rank-list li:last-child{ border-bottom:none; }
+.rank-list li.empty{ color:var(--ink-soft); justify-content:center; }
+.rank-list li.is-me{ background:#FDF9EC; }
+.rank-list a{ color:var(--ink); text-decoration:none; word-break:break-all; }
+.rank-list a:hover{ color:var(--red-pen); }
+.rank-list .total{ white-space:nowrap; font-weight:700; }
+
+/* ===== ルール ===== */
+.rules{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.9;
+    padding-top:20px;
+    border-top:1px dashed var(--paper-line);
+}
+.rules li{ margin-left:1.1em; }
+
+/* ===== バラを渡すパネル ===== */
+.sheet-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(35,42,53,.45);
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+}
+.sheet-overlay[hidden]{ display:none; }
+.give-sheet{
+    width:100%;
+    max-width:460px;
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    padding:26px 24px 28px;
+    text-align:center;
+    box-shadow:0 -10px 30px var(--shadow);
+}
+@media (min-width:600px){
+    .sheet-overlay{ align-items:center; }
+}
+.give-sheet .to{ font-size:13px; color:var(--ink-soft); }
+.give-sheet .to-name{
+    font-family:"Zen Old Mincho", serif;
+    font-size:22px;
+    font-weight:700;
+    margin:4px 0 18px;
+    word-break:break-all;
+}
+.stepper{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin-bottom:6px;
+}
+.stepper button{
+    width:42px; height:42px;
+    font-size:22px;
+    font-weight:700;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+}
+.stepper button:disabled{ opacity:.35; cursor:not-allowed; }
+.stepper input{
+    width:84px;
+    text-align:center;
+    font-family:"Zen Old Mincho", serif;
+    font-size:26px;
+    font-weight:700;
+    padding:4px;
+    border:1px solid var(--paper-line);
+}
+.stepper-note{ font-size:12.5px; color:var(--ink-soft); margin-bottom:20px; }
+.sheet-actions{ display:flex; gap:10px; justify-content:center; }
+#giveBtn{
+    font-weight:900;
+    font-size:15px;
+    color:#fff;
+    background:var(--red-pen);
+    border:none;
+    padding:13px 26px;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .2s;
+}
+#giveBtn:hover:not(:disabled){ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+#giveBtn:disabled{ opacity:.4; cursor:not-allowed; box-shadow:2px 2px 0 var(--ink); }
+#cancelBtn{
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink-soft);
+    background:transparent;
+    border:1px solid var(--paper-line);
+    padding:12px 20px;
+}
+</style>
+</head>
+
+<body>
+
+<a class="back-link" href="toppage.html">← ホームに戻る</a>
+
+<main class="wrap">
+    <div class="event-sheet">
+
+        <div class="event-head">
+            <span class="eyebrow">EVENT</span>
+            <h1>🌹 人気投票</h1>
+            <p>クイズを5問解くごとにバラが1本もらえます。好きなユーザーにバラを贈ろう。</p>
+        </div>
+
+        <div class="rose-panel">
+            <div>
+                <h3>使えるバラ</h3>
+                <p class="count is-main"><span id="availableCount">0</span><span class="unit">本</span></p>
+            </div>
+            <div>
+                <h3>もらったバラ</h3>
+                <p class="count"><span id="receivedCount">0</span><span class="unit">本</span></p>
+            </div>
+            <div>
+                <h3>贈ったバラ</h3>
+                <p class="count"><span id="givenCount">0</span><span class="unit">本</span></p>
+            </div>
+        </div>
+        <p id="untilNext"></p>
+
+        <div class="toast" id="toast"></div>
+
+        <h2 class="section-title">👥 バラを贈るユーザーを選ぶ</h2>
+        <input type="search" id="userSearch" placeholder="ユーザー名で絞り込み" autocomplete="off">
+        <ul class="user-list" id="userList"><li class="empty">読み込み中...</li></ul>
+
+        <div class="rank-grid">
+            <div>
+                <h2 class="rank-title">🌹 もらったバラ TOP10</h2>
+                <ol class="rank-list" id="receivedRanking"></ol>
+            </div>
+            <div>
+                <h2 class="rank-title">💐 贈ったバラ TOP10</h2>
+                <ol class="rank-list" id="givenRanking"></ol>
+            </div>
+        </div>
+
+        <ul class="rules">
+            <li>クイズを5問解答するごとにバラを1本獲得（正解・不正解は問いません）</li>
+            <li>バラは何本でもまとめて贈れます。一度贈ったバラは取り消せません</li>
+            <li>自分自身にバラを贈ることはできません</li>
+            <li>バラの数は、クイズの正答率など他の成績データには影響しません</li>
+        </ul>
+
+    </div>
+</main>
+
+<!-- バラを渡すパネル -->
+<div class="sheet-overlay" id="giveOverlay" hidden>
+    <div class="give-sheet">
+        <p class="to">バラを贈る相手</p>
+        <p class="to-name" id="giveToName"></p>
+
+        <div class="stepper">
+            <button id="minusBtn" type="button" aria-label="1本減らす">−</button>
+            <input type="number" id="giveAmount" min="1" value="1" inputmode="numeric">
+            <button id="plusBtn" type="button" aria-label="1本増やす">＋</button>
+        </div>
+        <p class="stepper-note">贈れるのは最大 <span id="giveMax">0</span> 本</p>
+
+        <div class="sheet-actions">
+            <button id="cancelBtn" type="button">やめる</button>
+            <button id="giveBtn" type="button">🌹 バラを贈る</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="idle-logout.js"></script>
+<script src="event-popularity.js"></script>
+
+</body>
+</html>
