@@ -7,9 +7,6 @@
 //   （事前に Supabase で migration_user_achievements.sql を実行しておくこと）
 // ==========================
 
-// タイムアタックの限定アバター解放スコアと合わせる（event-timeattack.js参照）
-const TA_UNLOCK_SCORE = 15;
-
 // ----- レベル計算 -----
 // 必要な累計正解数は「5 × (レベル-1)^2」問。上のレベルほど必要数が増える。
 // 例: Lv1→2 は 5問、Lv4→5 は 35問、Lv9→10 は 85問。
@@ -60,11 +57,6 @@ const MISSIONS = [
     { id: "level_5",     title: "レベル5到達",     desc: "レベル5に到達",                         icon: "⭐", stars: 1, check: ctx => ctx.level >= 5 },
     { id: "level_10",    title: "レベル10到達",    desc: "レベル10に到達",                        icon: "🌟", stars: 2, check: ctx => ctx.level >= 10 },
     { id: "level_20",    title: "レベル20到達",    desc: "レベル20に到達",                        icon: "💫", stars: 3, check: ctx => ctx.level >= 20 },
-
-    { id: "ta_played",   title: "タイムアタック挑戦者", desc: "タイムアタックに1回挑戦",           icon: "⏱️", stars: 1, check: ctx => ctx.taPlayed },
-    { id: "ta_unlock",   title: "快速回答",         desc: `タイムアタックで${TA_UNLOCK_SCORE}問正解`, icon: "⚡", stars: 2, check: ctx => ctx.taBest >= TA_UNLOCK_SCORE },
-
-    { id: "dice_30",     title: "すごろく旅人",     desc: "サイコロの旅で30マス到達",              icon: "🎲", stars: 2, check: ctx => ctx.dicePos >= 30 },
 ];
 
 // ==========================
@@ -112,11 +104,7 @@ async function buildContext(userId, correct, wrong) {
     const rate = totalAnswered === 0 ? 0 : Math.round((correct / totalAnswered) * 100);
     const level = calcLevel(correct);
 
-    const [{ data: taRow }, { data: diceRow }, streak] = await Promise.all([
-        supabaseClient.from("timeattack_scores").select("best_score").eq("user_id", userId).maybeSingle(),
-        supabaseClient.from("dice_progress").select("position").eq("user_id", userId).maybeSingle(),
-        calcPlayStreak(userId)
-    ]);
+    const streak = await calcPlayStreak(userId);
 
     return {
         totalAnswered,
@@ -124,10 +112,7 @@ async function buildContext(userId, correct, wrong) {
         wrong,
         rate,
         level,
-        streak,
-        taPlayed: !!taRow,
-        taBest: taRow?.best_score ?? 0,
-        dicePos: diceRow?.position ?? 0
+        streak
     };
 }
 
