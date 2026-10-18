@@ -317,40 +317,16 @@ async function loadEventStatus() {
 
     const items = [];
 
-    // タイムアタック：自己ベスト
-    const { data: ta } = await supabaseClient
-        .from("timeattack_scores")
-        .select("best_score")
-        .eq("user_id", myId)
-        .maybeSingle();
+    // 人気投票：もらったバラ・贈ったバラ・使えるバラ
+    const { data: rose, error } = await supabaseClient.rpc("rose_status");
 
-    if (ta) {
+    if (!error && rose) {
         items.push({
-            key: "event:timeattack",
+            key: "event:popularity",
             type: "event",
-            icon: "⏱️",
-            title: "タイムアタッククイズ",
-            body: `自己ベスト ${ta.best_score}問正解${ta.best_score >= 15 ? "（限定アバター解放済み🎁）" : ""}`,
-            shortDate: "",
-            fullDate: "現在の状況",
-            trackRead: false
-        });
-    }
-
-    // サイコロの旅：現在位置
-    const { data: dice } = await supabaseClient
-        .from("dice_progress")
-        .select("position,dice_used")
-        .eq("user_id", myId)
-        .maybeSingle();
-
-    if (dice) {
-        items.push({
-            key: "event:dice",
-            type: "event",
-            icon: "🎲",
-            title: "サイコロの旅",
-            body: `現在 ${dice.position}マス目（サイコロ使用: ${dice.dice_used}回）`,
+            icon: "🌹",
+            title: "人気投票",
+            body: `もらったバラ ${rose.received}本／贈ったバラ ${rose.given}本／使えるバラ ${rose.available}本`,
             shortDate: "",
             fullDate: "現在の状況",
             trackRead: false
