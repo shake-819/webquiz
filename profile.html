@@ -477,6 +477,82 @@ nav button.is-current{ color:var(--gold); border-color:var(--gold-soft); backgro
     .avl-shimmer, .avl-drop, .avl-petal{ animation:none !important; }
 }
 
+/* ===== 時の王アバター（avt- 系） ===== */
+
+.avt, .avt-stage{
+    position:relative;
+    width:100%; height:100%;
+    overflow:hidden;
+}
+
+.avt-img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+}
+.avt-back { z-index:0; }
+.avt-front{ z-index:4; }
+
+/* 背景の時計の環だけを切り抜いて回す。
+   --cx/--cy = 時計の中心、--r-in/--r-out = 環の内側/外側の半径。
+   画像に合わせて調整する。 */
+.avt-ring{
+    z-index:1;
+    /* timeking_back.webp（正方形）の時計：中心は右上寄り、環は半径およそ13%〜26% */
+    --cx:53.5%; --cy:26%;
+    --r-in:13%; --r-out:26%;
+    transform-origin:var(--cx) var(--cy);
+    /* ellipse 100% 100% にして、%を「枠の幅」基準にそろえる（circleだと中心位置で基準がずれる） */
+    -webkit-mask:radial-gradient(ellipse 100% 100% at var(--cx) var(--cy),
+        transparent var(--r-in), #000 calc(var(--r-in) + 1.5%),
+        #000 var(--r-out), transparent calc(var(--r-out) + 1.5%));
+            mask:radial-gradient(ellipse 100% 100% at var(--cx) var(--cy),
+        transparent var(--r-in), #000 calc(var(--r-in) + 1.5%),
+        #000 var(--r-out), transparent calc(var(--r-out) + 1.5%));
+    animation:avtSpin 40s linear infinite;
+}
+
+/* 背後で脈動する金のオーラ */
+.avt-aura{
+    position:absolute; inset:0; z-index:2;
+    pointer-events:none;
+    mix-blend-mode:screen;
+    background:radial-gradient(ellipse 45% 45% at 53.5% 26%,
+        rgba(255,215,120,.6) 0%, rgba(255,215,120,0) 100%);
+    transform-origin:53.5% 26%;
+    animation:avtPulse 3s ease-in-out infinite;
+}
+
+/* 金の砂（粒はJSが生成） */
+.avt-sand{
+    position:absolute; inset:0; z-index:3;
+    overflow:hidden; pointer-events:none;
+}
+.avt-grain{
+    position:absolute; top:-10px;
+    background:linear-gradient(#ffe9a8, #d9a520);
+    border-radius:50%;
+    opacity:0;
+    animation-name:avtFall;
+    animation-timing-function:linear;
+    animation-fill-mode:forwards;
+}
+
+@keyframes avtSpin{ to{ transform:rotate(360deg); } }
+@keyframes avtPulse{
+    0%,100%{ opacity:.35; transform:scale(.95); }
+    50%{     opacity:.9;  transform:scale(1.05); }
+}
+@keyframes avtFall{
+    0%{   opacity:0;  transform:translate(0,0); }
+    10%{  opacity:.9; }
+    100%{ opacity:0;  transform:translate(var(--d,0px), var(--fall,360px)); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .avt-ring, .avt-aura, .avt-grain{ animation:none !important; }
+}
+
 /* ===== 演出アバターの下部キャプション（達筆フォントで1文字ずつ表示） ===== */
 
 .avk{ position:relative; width:100%; height:100%; overflow:hidden; }
