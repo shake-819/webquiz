@@ -5,6 +5,14 @@ const GITHUB_ASSETS_BASE =
 // assets/collection/aura-gold-burst.png を配置しておくこと。
 const COLLECTION_AURA_URL = `${GITHUB_ASSETS_BASE}/collection/aura-gold-burst.jpeg`;
 
+// アバター用ファイルのパス解決。
+// "https://..." で始まる完全なURLならそのまま使い、
+// "timeking.mp4" のようなファイル名だけなら assets/avatars/ 配下として扱う。
+function avatarAssetUrl(src) {
+    if (!src) return "";
+    return /^https?:\/\//i.test(src) ? src : `${GITHUB_ASSETS_BASE}/avatars/${src}`;
+}
+
 // ----- アバタープリセット -----
 const AVATAR_PRESETS = [
     { key: "avatar1", url: `${GITHUB_ASSETS_BASE}/avatars/avatar1.jpg` },
@@ -49,14 +57,13 @@ const AVATAR_PRESETS = [
         text: ["2学期中間", "王者"],
         exclusiveTo: ["874b3df4-f031-40a9-b332-5106ad70118f"] },
 
-    // ↓ 「時の王」：背景の中央にある時計の環だけがゆっくり回り、金の砂が降り、オーラが脈動する（文字なし）。
-    // timeKing:true で専用の描画（avt- 系クラス）になる。layered の front/back は両方必須。
-    { key: "avatar_timeking", name: "時の王",
-        layered: {
-            front: `${GITHUB_ASSETS_BASE}/avatars/timeking_front.webp`,
-            back:  `${GITHUB_ASSETS_BASE}/avatars/timeking_back.webp`
-        },
-        timeKing: true,
+    // ↓ 動画（MP4）アバターの例。画面を開いている間は自動再生（音なし・ループ）。
+    // video には「ファイル名だけ（assets/avatars/ 配下）」か「https:// から始まる完全なURL」のどちらでも指定できる。
+    // 画像（jpg）は不要。ピッカーのサムネイルも動画自体を小さく再生して表示する。
+    { key: "avatar_timeking_video", name: "時の王（動画）",
+        video: "timeking.mp4",
+        // video: "https://example.com/path/timeking.mp4", // ← 完全なURLでもOK
+        focus: "50% 50%",
         exclusiveTo: ["284c90b0-1890-4e42-8282-0bf21af46d87"] },
 ];
 
@@ -78,6 +85,7 @@ function getPreset(key) {
 }
 
 // ピッカーでのサムネイル表示に使う画像（layeredならfrontを使う）
+// ※動画プリセットはピッカー側で <video> を直接使うので、ここは画像用
 function getPresetThumbnail(preset) {
     return preset.thumbnail || (preset.layered ? preset.layered.front : preset.url);
 }
@@ -191,6 +199,23 @@ function renderAvatar(avatarKey) {
     }
 
     const focus = preset.focus || "50% 50%";
+
+    // 動画（MP4）アバター。画面を開いている間は自動再生（音なし・ループ）。
+    // iOS等で自動再生を通すには muted + playsinline が必須。
+    if (preset.video) {
+        el.style.background = "#000";
+        el.innerHTML = `<video class="avatar-video" src="${avatarAssetUrl(preset.video)}"
+            autoplay muted loop playsinline preload="auto"
+            disablepictureinpicture
+            style="width:100%;height:100%;object-fit:cover;object-position:${focus}"
+            onerror="this.parentElement.innerHTML='<span class=&quot;avatar-fallback&quot;>🙂</span>'"></video>`;
+        const v = el.querySelector("video");
+        if (v) {
+            v.muted = true;            // 属性だけだと効かないブラウザ対策
+            v.play().catch(() => {});  // 自動再生をブロックされた場合は先頭フレームのまま
+        }
+        return;
+    }
 
     // 「時の王」専用の描画。背景の時計の環だけを回し、砂・オーラを重ねる。
     // 既存の .avl 系CSSには依存しない（avt- 系クラスで完結）。
@@ -471,15 +496,30 @@ function openAvatarPicker() {
         btn.className = "picker-item";
         btn.title = preset.name || "";
 
-        // layered（front/back演出）のサムネイルは front の透過PNGをそのまま使うため、
-        // object-fit:cover + focus位置 で切り抜くと絵の上側が見切れてしまう。
-        // 通常アバター（1枚の写真）は今まで通りcoverで、layeredのみcontainにして全体を見せる。
-        const thumbClass = preset.layered ? "thumb-contain" : "";
-        const thumbStyle = preset.layered ? "" : `object-position:${preset.focus || "50% 50%"}`;
+        if (preset.video) {
+            // 動画プリセットは、動画そのものを小さく自動再生してサムネイルにする（jpg不要）。
+            // pointer-events:none にして、タップがボタン側に届くようにする。
+            btn.innerHTML = `<video class="thumb-contain" src="${avatarAssetUrl(preset.video)}"
+                autoplay muted loop playsinline preload="metadata"
+                style="object-fit:cover;object-position:${preset.focus || "50% 50%"};pointer-events:none"
+                onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🎬'}))"></video>`;
+            const tv = btn.querySelector("video");
+            if (tv) {
+                tv.muted = true;
+                tv.play().catch(() => {});
+            }
+        } else {
+            // layered（front/back演出）のサムネイルは front の透過PNGをそのまま使うため、
+            // object-fit:cover + focus位置 で切り抜くと絵の上側が見切れてしまう。
+            // 通常アバター（1枚の写真）は今まで通りcoverで、layeredのみcontainにして全体を見せる。
+            const thumbClass = preset.layered ? "thumb-contain" : "";
+            const thumbStyle = preset.layered ? "" : `object-position:${preset.focus || "50% 50%"}`;
 
-        btn.innerHTML = `<img class="${thumbClass}" src="${getPresetThumbnail(preset)}" alt="${preset.name || ""}"
-            style="${thumbStyle}"
-            onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🙂'}))">`;
+            btn.innerHTML = `<img class="${thumbClass}" src="${getPresetThumbnail(preset)}" alt="${preset.name || ""}"
+                style="${thumbStyle}"
+                onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🙂'}))">`;
+        }
+
         btn.addEventListener("click", () => selectAvatar(preset.key));
         grid.appendChild(btn);
     });
