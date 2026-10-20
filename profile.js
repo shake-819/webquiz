@@ -65,6 +65,11 @@ const AVATAR_PRESETS = [
         // video: "https://example.com/path/timeking.mp4", // ← 完全なURLでもOK
         focus: "50% 50%",
         exclusiveTo: ["284c90b0-1890-4e42-8282-0bf21af46d87"] },
+    { key: "midking_video", name: "中間テストの王（動画）",
+        video: "midking.mp4",
+        // video: "https://example.com/path/timeking.mp4", // ← 完全なURLでもOK
+        focus: "50% 50%",
+        exclusiveTo: [""] },
 ];
 
 
